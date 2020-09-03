@@ -1,9 +1,21 @@
 ## 1. 计算机基础
+- 字符编码
+- 数据结构和算法
+- 网络编程
 ## 2. 后端&架构
+- Go
+- Java
+- 分布式
+- 区块链
+- 微服务
+- 数据库
+- 系统设计
 ## 3. 前端&移动
 ## 4. 运维&测试
-### 4.1 负载均衡
-1. [负载均衡 SLB](https://github.com/ldbmcs/Developer-Notes/blob/master/doc/%E8%BF%90%E7%BB%B4%26%E6%B5%8B%E8%AF%95/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%20SLB.md)
+- DevOps
+- Docker
+- Kubernetes
+- 负载均衡
 ## 5. 人工智能&大数据
 ## 6. 个人成长
 ## 7. 面试专区
