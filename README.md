@@ -9,7 +9,7 @@
 - [数据结构](https://ldbmcs.gitbook.io/java/shu-ju-jie-gou-he-suan-fa/shu-ju-jie-gou)
 - [算法](https://ldbmcs.gitbook.io/java/shu-ju-jie-gou-he-suan-fa/suan-fa)
 
-## ☕ Java
+## Java
 - [Java 基础](https://ldbmcs.gitbook.io/java/java/java-ji-chu)
 - Java 集合
 - [Java 并发](https://ldbmcs.gitbook.io/java/java/java-bing-fa)
