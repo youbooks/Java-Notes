@@ -1,0 +1,229 @@
+# 分布式锁的原理及几种实现方式
+
+## 1. 分布式锁
+
+普通进程锁的调用者只在该进程中（或该进程的线程中），因此较为容易进行资源使用协调。在分布式环境中，不同机器的不同进程会对同一个资源进行使用/争夺，那么如何对资源的使用进行协调呢？这时就需要分布式锁来进行进程间的协调，以实现同一时刻只能有一个进程占有该资源。
+
+> 分布式锁，是控制分布式系统之间同步访问共享资源的一种方式。在分布式系统中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要互斥来防止彼此干扰来保证一致性，在这种情况下，便需要使用到分布式锁。——《维基百科》
+
+## 2. 分布式锁的特点
+
+* 原子性：同一时刻，只能有一个机器的一个线程得到锁；
+* 可重入性：同一对象（如线程、类）可以重复、递归调用该锁而不发生死锁；
+* 可阻塞：在没有获得锁之前，只能阻塞等待直至获得锁；
+* 高可用：哪怕发生程序故障、机器损坏，锁仍然能够得到被获取、被释放；
+* 高性能：获取、释放锁的操作消耗小。
+
+上述特点和要求，根据业务需求、场景不同而有所取舍。
+
+下面介绍几种基于常用数据库/缓存实现的分布式锁。
+
+## 3. 数据库
+
+数据库实现分布式锁一般有两种方式：**使用唯一索引或者主键**；使用数据库自带的锁进行。
+
+### 3.1 唯一索引或者主键
+
+表定义例子：
+
+```sql
+create table distributed_lock(
+    id int not null auto_increment primay key,
+    method varchar(255) not null defult '' comment '方法名，同一时刻，该方法只能有一个调用者',
+    expire timestamp not null default current_timestamp()+60 comment '过期时间，过期后要被删除',
+    unique key(method)
+);
+```
+
+* method 唯一索引，表示需要互斥调用的方法。
+* expire 用于标记锁的最长持有时间。需要定期检查expire，将大于now的记录删除，防止调用者长时间不释放锁（如调用者意外退出而没有释放锁）。
+
+**加锁操作**
+
+```sql
+insert into distributed_lock(method, expire) values("the name of your method", current_timestamp+30s);
+```
+
+**解锁操作**
+
+```sql
+delete from distributed_lock where method="the name of your method"
+// or
+delete from distributed_lock where id=$id
+```
+
+上述这种基于唯一索引或者主键的实现机制特点如下：
+
+* 易于理解和使用、调试；
+* 数据库在单点情况下，如果宕机会失去所有的锁信息；（可以通过主备数据库形式提高可用性）
+* 非重入；（可以给数据库增加一个字段（如belong\_to）解决，获取锁的时候当发现调用者已经获取得到锁就直返回成功）
+* 不是非阻塞锁，即尝试获取但是失败会直接返回错误。（可以通过阻塞轮询来解决）
+* 性能：传统数据库在并发量高的时候如何解决该问题（如淘宝的下单场景，一致性哈希？）?
+
+基于数据库实现锁，还用另一种方式：**排他锁**。
+
+### 3.2 基于数据库排他锁
+
+除了可以通过增删操作数据表中的记录以外，其实还可以借助数据中自带的锁来实现分布式的锁。
+
+表定义:
+
+```sql
+CREATE TABLE `methodLock` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `method_name` varchar(64) NOT NULL DEFAULT '' COMMENT '锁定的方法名',
+  `desc` varchar(1024) NOT NULL DEFAULT '备注信息',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '保存数据时间，自动生成',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uidx_method_name` (`method_name `) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='锁定中的方法';
+```
+
+可以通过数据库的排他锁来实现分布式锁。 基于MySql的InnoDB引擎，可以使用以下方法来实现加锁操作：
+
+```sql
+public boolean lock(){
+    connection.setAutoCommit(false)
+    while(true){
+        try{
+            result = select * from methodLock where method_name=xxx for update;
+            if(result==null){
+                return true;
+            }
+        }catch(Exception e){
+
+        }
+        sleep(1000);
+    }
+    return false;
+}
+```
+
+在查询语句后面增加for update，数据库会在查询过程中给数据库表增加排他锁（这里再多提一句，**InnoDB引擎在加锁的时候，只有通过索引进行检索的时候才会使用行级锁，否则会使用表级锁**。这里我们希望使用行级锁，就要给method\_name添加索引，值得注意的是，这个索引一定要创建成唯一索引，否则会出现多个重载方法之间无法同时被访问的问题。重载方法的话建议把参数类型也加上。）。当某条记录被加上排他锁之后，其他线程无法再在该行记录上增加排他锁。
+
+我们可以认为获得排它锁的线程即可获得分布式锁，当获取到锁之后，可以执行方法的业务逻辑，执行完方法之后，再通过以下方法解锁：
+
+```sql
+public void unlock(){
+    connection.commit();
+}
+```
+
+通过 `connection.commit()` 操作来释放锁。
+
+**这种方法可以有效的解决上面提到的无法释放锁和阻塞锁的问题。**
+
+阻塞锁？ for update语句会在执行成功后立即返回，在执行失败时一直处于阻塞状态，直到成功。 锁定之后服务宕机，无法释放？使用这种方式，服务宕机之后数据库会自己把锁释放掉。 但是还是无法直接解决数据库单点和可重入问题。
+
+这里还可能存在另外一个问题，虽然我们对method\_name 使用了唯一索引，并且显示使用for update来使用行级锁。但是，MySql会对查询进行优化，即便在条件中使用了索引字段，但是否使用索引来检索数据是由 MySQL 通过判断不同执行计划的代价来决定的，如果 MySQL 认为全表扫效率更高，比如对一些很小的表，它就不会使用索引，这种情况下 InnoDB 将使用表锁，而不是行锁。
+
+还有一个问题，就是我们要使用排他锁来进行分布式锁的lock，那么一个排他锁长时间不提交，就会占用数据库连接。一旦类似的连接变得多了，就可能把数据库连接池撑爆。
+
+## 4. 基于缓存实现分布式锁
+
+相比较于基于数据库实现分布式锁的方案来说，基于缓存来实现在性能方面会表现的更好一点。而且很多缓存是可以集群部署的，可以解决单点问题。
+
+目前有很多成熟的缓存产品，包括Redis，memcached等。下面基于Redis为例来分析下使用缓存实现分布式锁的方案。
+
+### 4.1 方式一
+
+`setnx`： 当锁不存在的时候则加锁成功，否则返回false，获取锁失败。为防止redis故障，可以增加expire来设置锁的最大持有时间。防止调用者长时间不释放锁（如调用者意外退出而没有释放锁）。
+
+```text
+setnx method user // user为调用者，是为了锁可重入
+expire method 30
+```
+
+这种方法的不足之处是无法保证`setnx`和`expire`的原子。想象一下，如果`setnx`成功之后，设置`expire`之前，调用者由于意外退出而无法释放锁，就会造成锁无法被正确释放，造成死锁现象。为此，可以如下命令代替：
+
+```text
+setex method 30
+```
+
+setex是redis2.6提供的功能。解锁操作判断锁是否超时，如果没超时删除锁，如果已超时，不用处理（防止删除其他线程的锁）。
+
+### 4.2 方法二
+
+1. 线程/进程A `setnx`，key为`method`，值为超时的时间戳\(t1\)，如果返回true，获得锁。
+2. 线程B用get命令获取t1，与当前时间戳比较，判断是否超时，没超时false，如果已超时执行步骤3
+3. 计算新的超时时间t2，使用`getset method t2`命令返回t3\(这个值可能其他线程已经修改过\)，如果t1==t3,获得锁,如果t1!=t3说明锁被其他线程获取了
+4. 获取锁后，处理完业务逻辑，再去判断锁是否超时，如果没超时删除锁，如果已超时，不用处理（防止删除其他线程的锁）
+
+可见这种方法不可重入，但是针对一些无需可重入的场景这种实现方法也是可行的。
+
+### 4.3 方法三
+
+为了提高可用性，redis的作者提倡使用五个甚至更多的redis节点，使用上述方法的一种来获取/释放锁，当成功获取到三个或者三个以上节点的锁，则认为成功持有锁。由于必须获取到5个节点中的3个以上，所以可能出现获取锁冲突，即大家都获得了1-2把锁，结果谁也不能获取到锁，针对这种情况可以随机等待一段时间后再重新尝试获得锁。
+
+## 5. 基于Zookeeper实现分布式锁
+
+zookeeper的内部结构类似于一个文件系统，**同一目录下的文件不能同名，即可以保证创建文件（也称节点）是一个原子性的操作**。
+
+zookeeper数据模型：
+
+* **永久节点**：节点创建后，不会因为会话失效而消失
+* **临时节点**：与永久节点相反，如果客户端连接失效，则立即删除节点。（可以作为超时控制）
+* **顺序节点**：与上述两个节点特性类似，如果指定创建这类节点时，zk会自动在节点名后加一个数字后缀，并且是递增。
+* **监视器**（watcher）：当创建一个节点时，可以注册一个该节点的监视器，当节点状态发生改变时，watch被触发时，ZooKeeper将会向客户端发送且仅发送一条通知，因为watch只能被触发一次。
+
+根据zookeeper的这些特性，我们来看看如何利用这些特性来实现分布式锁，先创建一个锁目录lock。
+
+**获取锁**:
+
+* 在lock目录建立一个新节点，类型为临时顺序节点，节点名为method\_xx，xx为节点的序号。
+* 查看lock目录下有没有比xx更小的节点，如果没有，则获取节点成功并返回，否则，使用监听器监听lock目录下序号次小于xx的节点的变更。
+* 当接收到lock目录的变更通知，如果收到变更通知，则获取成功。
+
+**释放锁**：
+
+* 删除节点method\_xx
+
+可以直接使用Zookeeper第三方库[Curator](https://curator.apache.org/)客户端，这个客户端中封装了一个可重入的锁服务。
+
+```java
+public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException {
+    try {
+        return interProcessMutex.acquire(timeout, unit);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return true;
+}
+public boolean unlock() {
+    try {
+        interProcessMutex.release();
+    } catch (Throwable e) {
+        log.error(e.getMessage(), e);
+    } finally {
+        executorService.schedule(new Cleaner(client, path), delayTimeForClean, TimeUnit.MILLISECONDS);
+    }
+    return true;
+}
+```
+
+Curator提供的InterProcessMutex是分布式锁的实现。acquire方法用户获取锁，release方法用于释放锁。
+
+使用ZK实现的分布式锁好像完全符合了本文开头我们对一个分布式锁的所有期望。但是，其实并不是，Zookeeper实现的分布式锁其实存在一个缺点，那就是性能上可能并没有缓存服务那么高。因为每次在创建锁和释放锁的过程中，都要动态创建、销毁瞬时节点来实现锁功能。ZK中创建和删除节点只能通过Leader服务器来执行，然后将数据同不到所有的Follower机器上。
+
+**其实，使用Zookeeper也有可能带来并发问题，只是并不常见而已。考虑这样的情况，由于网络抖动，客户端可ZK集群的session连接断了，那么zk以为客户端挂了，就会删除临时节点，这时候其他客户端就可以获取到分布式锁了。就可能产生并发问题。这个问题不常见是因为zk有重试机制，一旦zk集群检测不到客户端的心跳，就会重试，Curator客户端支持多种重试策略。多次重试之后还不行的话才会删除临时节点。（所以，选择一个合适的重试策略也比较重要，要在锁的粒度和并发之间找一个平衡。）**
+
+## 6. 三种方案的比较
+
+上面几种方式，哪种方式都无法做到完美。就像CAP一样，在复杂性、可靠性、性能等方面无法同时满足，所以，根据不同的应用场景选择最适合自己的才是王道。
+
+#### 从理解的难易程度角度（从低到高）
+
+数据库 &gt; 缓存 &gt; Zookeeper
+
+#### 从实现的复杂性角度（从低到高）
+
+Zookeeper &gt;= 缓存 &gt; 数据库
+
+#### 从性能角度（从高到低）
+
+缓存 &gt; Zookeeper &gt;= 数据库
+
+#### 从可靠性角度（从高到低）
+
+Zookeeper &gt; 缓存 &gt; 数据库
+
