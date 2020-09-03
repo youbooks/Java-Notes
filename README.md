@@ -1,3 +1,5 @@
+> 写在最前面：此仓库中的大多数文章都是大牛写的，本人只做了整理工作，大家可以点击文章中原文的链接进行查看。
+
 ## 计算机基础
 - [字符编码](https://ldbmcs.gitbook.io/java/ji-suan-ji-ji-chu/zi-fu-bian-ma)
 - [网络编程](https://ldbmcs.gitbook.io/java/ji-suan-ji-ji-chu/wang-luo-bian-cheng)
