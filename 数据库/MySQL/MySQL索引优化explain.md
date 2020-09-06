@@ -1,8 +1,4 @@
-# MySQL索引优化explain
-
-原文：https://mp.weixin.qq.com/s/rem7Ds_QSnyhlrtNPByQcg
-
-[TOC]
+> 转载：[一本彻底搞懂MySQL索引优化EXPLAIN百科全书](https://mp.weixin.qq.com/s/rem7Ds_QSnyhlrtNPByQcg)
 
 ## 1. MySQL逻辑架构介绍
 
