@@ -344,5 +344,9 @@ public String getPageSql(String sql) {
 }
 ```
 
+终于，原来分页的SQL是在这里拼装起来的。
 
+总结：PageHelper首先将前端传递的参数保存到page这个对象中，接着将page的副本存放入ThreadLoacl中，这样可以保证分页的时候，参数互不影响，接着利用了mybatis提供的拦截器，取得ThreadLocal的值，重新拼装分页SQL，完成分页。
+
+PS：DEBUG用的好不好，对看框架源码很有很大的影响。
 
