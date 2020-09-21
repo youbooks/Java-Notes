@@ -83,11 +83,11 @@ CAP 原则又称 CAP 定理，1998年，加州大学的计算机科学家 Eric B
 
 #### 3.3.1 **Spring Cloud Eureka  -> AP**
 
-Spring Cloud Netflix 在设计 Eureka 时就紧遵AP原则（尽管现在2.0发布了，但是由于其闭源的原因 ，博主一直无法进一步的研究，但是目前 Ereka 1.x 任然是比较活跃的）。Eureka Server 也可以运行多个实例来构建集群（后面专门的文章讲解），解决单点问题，但不同于 ZooKeeper 的选举 leader 的过程，Eureka Server 采用的是Peer to Peer 对等通信。这是一种**去中心化的架构**（参看：微服务与微服务架构思想与原则），无 master/slave 之分，每一个 Peer 都是对等的。在这种架构风格中，节点通过彼此互相注册来提高可用性，每个节点需要添加一个或多个有效的 serviceUrl 指向其他节点。每个节点都可被视为其他节点的副本。
+Spring Cloud Netflix 在设计 Eureka 时就紧遵AP原则（尽管现在2.0发布了，但是由于其闭源的原因 ，博主一直无法进一步的研究，但是目前 Ereka 1.x 任然是比较活跃的）。Eureka Server 也可以运行多个实例来构建集群（后面专门的文章讲解），解决单点问题，但**不同于 ZooKeeper 的选举 leader 的过程，Eureka Server 采用的是Peer to Peer 对等通信。这是一种去中心化的架构**（参看：微服务与微服务架构思想与原则），无 master/slave 之分，每一个 Peer 都是对等的。在这种架构风格中，节点通过彼此互相注册来提高可用性，每个节点需要添加一个或多个有效的 serviceUrl 指向其他节点。每个节点都可被视为其他节点的副本。
 
 在集群环境中如果某台 Eureka Server 宕机，Eureka Client 的请求会自动切换到新的 Eureka Server 节点上，当宕机的服务器重新恢复后，Eureka 会再次将其纳入到服务器集群管理之中。当节点开始接受客户端请求时，所有的操作都会在节点间进行复制（replicate To Peer）操作，将请求复制到该 Eureka Server 当前所知的其它所有节点中。
 
-当一个新的 Eureka Server 节点启动后，会首先尝试从邻近节点获取所有注册列表信息，并完成初始化。Eureka Server 通过 getEurekaServiceUrls() 方法获取所有的节点，并且会通过心跳契约的方式定期更新。默认情况下，如果 Eureka Server 在一定时间内没有接收到某个服务实例的心跳（默认周期为30秒），Eureka Server 将会注销该实例（默认为90秒，如果某个 eureka.instance.lease-expiration-duration-in-seconds 进行自定义配置）。当 Eureka Server 节点在短时间内丢失过多的心跳时，那么这个节点就会进入自我保护模式（后面有文章会谈及关于 Eureka Server 的自我保护机制）。
+**当一个新的 Eureka Server 节点启动后，会首先尝试从邻近节点获取所有注册列表信息，并完成初始化**。Eureka Server 通过 getEurekaServiceUrls() 方法获取所有的节点，并且会通过心跳契约的方式定期更新。默认情况下，如果 Eureka Server 在一定时间内没有接收到某个服务实例的心跳（默认周期为30秒），Eureka Server 将会注销该实例（默认为90秒，如果某个 eureka.instance.lease-expiration-duration-in-seconds 进行自定义配置）。当 Eureka Server 节点在短时间内丢失过多的心跳时，那么这个节点就会进入自我保护模式（后面有文章会谈及关于 Eureka Server 的自我保护机制）。
 
 #### 3.3.2 **Apache Zookeeper -> CP**
 

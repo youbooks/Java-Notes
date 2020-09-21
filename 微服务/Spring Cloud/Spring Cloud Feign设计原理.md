@@ -607,6 +607,6 @@ public static class Default implements Client {
 ## 4. Feign 的性能怎么样？
 
 Feign 整体框架非常小巧，在处理请求转换和消息解析的过程中，基本上没什么时间消耗。真正影响性能的，是处理Http请求的环节。
-如上所述，由于默认情况下，Feign采用的是JDK的`HttpURLConnection`,所以整体性能并不高，刚开始接触Spring Cloud 的同学，如果没注意这些细节，可能会对Spring Cloud 有很大的偏见。
+如上所述，由于默认情况下，Feign采用的是JDK的`HttpURLConnection`，所以整体性能并不高，刚开始接触Spring Cloud 的同学，如果没注意这些细节，可能会对Spring Cloud 有很大的偏见。
 我们项目内部使用的是OkHttp3 作为连接客户端。
 

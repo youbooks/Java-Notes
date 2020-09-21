@@ -1,4 +1,4 @@
-原文链接: https://www.jianshu.com/p/79ca08116d57
+ 原文链接: https://www.jianshu.com/p/79ca08116d57
 
 关于消息队列，从前年开始断断续续看了些资料，想写很久了，但一直没腾出空，近来分别碰到几个朋友聊这块的技术选型，是时候把这块的知识整理记录一下了。
 
@@ -497,10 +497,23 @@ RABBITMQ_NODENAME=test_rabbit_2 ./sbin/rabbitmqctl stop
 
 ### 9.2 如何配置死信队列
 
-这一部分将是本文的关键，如何配置死信队列呢？其实很简单，大概可以分为以下步骤：
+这一部分将是本文的关键，**如何配置死信队列呢？**其实很简单，大概可以分为以下步骤：
 
 1. 配置业务队列，绑定到业务交换机上。
-2. 为业务队列配置死信交换机和路由key。
+
+2. **为业务队列配置死信交换机和路由key**。
+
+   ```java
+   @Bean
+       public Queue delayProcessQueue() {
+           Map<String, Object> params = new HashMap<>(3);
+           params.put("x-dead-letter-exchange", MQ_MAIN_EXCHANGE);
+           params.put("x-dead-letter-routing-key", MQ_MAIL_KEY);
+           params.put("x-message-ttl", Integer.valueOf(mailDelayTtl));
+           return new Queue(MQ_MAIL_DELAY_QUEUE, true, false, false, params);
+       }
+   ```
+
 3. 为死信交换机配置死信队列。
 
 注意，并不是直接声明一个公共的死信队列，然后所以死信消息就自己跑到死信队列里去了。而是**为每个需要使用死信的业务队列配置一个死信交换机，这里同一个项目的死信交换机可以共用一个，然后为每个业务队列分配一个单独的路由key。**

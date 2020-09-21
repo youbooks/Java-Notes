@@ -124,7 +124,7 @@ Martin Kleppmann也质疑过这一点，这里直接用他的图：
 
 Martin Kleppmann举的是GC的例子，我碰到的是网络延迟的情况。不管是哪种情况，不可否认的是这种情况无法避免，一旦出现很容易懵逼。
 
-如何解决呢？一种解决方案是不设置TTL，而是在获取锁成功后，给锁加一个watchdog，watchdog会起一个定时任务，在锁没有被释放且快要过期的时候会续期。这样说有些抽象，下面结合redisson源码说下：
+如何解决呢？一种解决方案是不设置TTL，而是在获取锁成功后，给锁加一个watchdog，**watchdog会起一个定时任务，在锁没有被释放且快要过期的时候会续期**。这样说有些抽象，下面结合redisson源码说下：
 
 ```java
  public class RedissonLock extends RedissonExpirable implements RLock {
@@ -279,7 +279,7 @@ public class RedissonLock extends RedissonExpirable implements RLock {
 }
 ```
 
-可以看到，最后加锁的逻辑会进入到org.redisson.RedissonLock#tryAcquireAsync中，在获取锁成功后，会进入scheduleExpirationRenewal，这里面初始化了一个定时器，dely的时间是internalLockLeaseTime / 3。在redisson中，internalLockLeaseTime是30s，也就是每隔10s续期一次，每次30s。 如果是基于zookeeper实现的分布式锁，可以利用zookeeper检查节点是否存活，从而实现续期，zookeeper分布式锁没用过，不详细说。
+可以看到，最后加锁的逻辑会进入到`org.redisson.RedissonLock#tryAcquireAsync`中，在获取锁成功后，会进入scheduleExpirationRenewal，这里面初始化了一个定时器，dely的时间是`internalLockLeaseTime / 3`。在redisson中，internalLockLeaseTime是30s，也就是每隔10s续期一次，每次30s。 **如果是基于zookeeper实现的分布式锁，可以利用zookeeper检查节点是否存活，从而实现续期**，zookeeper分布式锁没用过，不详细说。
 
 不过这种做法也无法百分百做到同一时刻只有一个client获取到锁，如果续期失败，比如发生了Martin Kleppmann所说的STW的GC，或者client和redis集群失联了，只要续期失败，就会造成同一时刻有多个client获得锁了。在我的场景下，我将锁的粒度拆小了，redisson的续期机制已经够用了。 如果要做得更严格，得加一个续期失败终止任务的逻辑。这种做法在以前Python的代码中实现过，Java还没有碰到这么严格的情况。
 
