@@ -7,8 +7,7 @@
 ## 计算机基础
 - [字符编码](https://ldbmcs.gitbook.io/java/ji-suan-ji-ji-chu/zi-fu-bian-ma)
 - [网络编程](https://ldbmcs.gitbook.io/java/ji-suan-ji-ji-chu/wang-luo-bian-cheng)
-- 安全编程
-  - 加密算法
+- [网络安全](https://ldbmcs.gitbook.io/java/ji-suan-ji-ji-chu/wang-luo-an-quan)
 
 ## 数据结构和算法
 - [数据结构](https://ldbmcs.gitbook.io/java/shu-ju-jie-gou-he-suan-fa/shu-ju-jie-gou)
