@@ -6,3 +6,4 @@
 6. 分布式：一致性理论，分布式锁，分布式事务，Zookeeper，Kafka，RabbitMQ，elasticsearch
 7. 运维&测试：docker，k8s，Linux
 8. 大数据【了解】：Hadoop，HDFS，Hbase，Hive，Spark
+
