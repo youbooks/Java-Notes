@@ -134,6 +134,28 @@ TransactionDefinition 接口中定义了五个表示隔离级别的常量：
 
 当事务方法被另一个事务方法调用时，必须指定事务应该如何传播。例如：方法可能继续在现有事务中运行，也可能开启一个新事务，并在自己的事务中运行。在TransactionDefinition定义中包括了如下几个表示传播行为的常量：
 
+```java
+public enum Propagation {
+    REQUIRED(0),
+    SUPPORTS(1),
+    MANDATORY(2),
+    REQUIRES_NEW(3),
+    NOT_SUPPORTED(4),
+    NEVER(5),
+    NESTED(6);
+
+    private final int value;
+
+    private Propagation(int value) {
+        this.value = value;
+    }
+
+    public int value() {
+        return this.value;
+    }
+}
+```
+
 **支持当前事务的情况：**
 
 - **TransactionDefinition.PROPAGATION_REQUIRED：** 如果当前存在事务，则加入该事务；如果当前没有事务，则创建一个新的事务。
