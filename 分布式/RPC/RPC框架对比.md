@@ -16,6 +16,9 @@
 而跨语言平台的开源 RPC 框架主要有以下几种。
 
 - `gRPC`：Google 于 2015 年对外开源的跨语言 RPC 框架，支持多种语言。
+
+  > gRPC 官方文档中文版：https://doc.oschina.net/grpc?t=58008
+
 - `Thrift`：最初是由 Facebook 开发的内部系统跨语言的 RPC 框架，2007 年贡献给了 Apache 基金，成为 Apache 开源项目之一，支持多种语言。
 
 如果你的业务场景仅仅局限于一种语言的话，可以选择跟语言绑定的 RPC 框架中的一种；
