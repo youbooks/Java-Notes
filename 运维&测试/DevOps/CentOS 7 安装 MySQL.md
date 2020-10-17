@@ -42,6 +42,8 @@ yum repolist enabled | grep mysql
 开始安装。
 
 ```shell
+# 安装mysql之前要先禁用默认的mysql模块
+sudo yum module disable mysql
 yum install -y mysql-community-server
 ```
 
@@ -108,6 +110,11 @@ mysql root@localhost:(none)> show VARIABLES like "%password%"
 
 ```mysql
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '123456' WITH GRANT OPTION;
+--8.0
+use mysql;
+update user set user.host='%' where user.user='root';
+FLUSH PRIVILEGES;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%'WITH GRANT OPTION;
 ```
 
 ### 3.3 binlog

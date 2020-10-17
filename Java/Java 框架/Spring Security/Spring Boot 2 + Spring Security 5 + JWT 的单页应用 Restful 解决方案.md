@@ -32,7 +32,7 @@
 
 **登入：**
 
-1. POST 用户名密码到 \login
+1. POST 用户名密码到 `\login`
 2. 请求到达 `JwtAuthenticationFilter` 中的 `attemptAuthentication()` 方法，获取 request 中的 POST 参数，包装成一个 `UsernamePasswordAuthenticationToken` 交付给 `AuthenticationManager` 的 `authenticate()` 方法进行鉴权。
 3. `AuthenticationManager` 会从 `CachingUserDetailsService` 中查找用户信息，并且判断账号密码是否正确。
 4. 如果账号密码正确跳转到 `JwtAuthenticationFilter` 中的 `successfulAuthentication()` 方法，我们进行签名，生成 token 返回给用户。
