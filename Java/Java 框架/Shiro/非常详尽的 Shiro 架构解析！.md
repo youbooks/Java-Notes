@@ -74,7 +74,7 @@ Apache Shiro的设计目标是通过直观和易于使用来简化应用程序�
 
 Shiro在它自己的设计中体现了这些概念。通过匹配那些对于软件开发人员来说已经很直观的东西，Apache Shiro几乎在任何应用程序保持了直观和易用性。
 
-在最高的概念层次，Shiro的架构有3个主要的概念：Subject，SecurityManager 和 Realms。
+在最高的概念层次，Shiro的架构有3个主要的概念：`Subject`，`SecurityManager` 和 `Realms`。
 
 下面的关系图是关于这些组件是如何交互的高级概述，而且我们将会在下面讨论每一个概念：
 
@@ -82,19 +82,19 @@ Shiro在它自己的设计中体现了这些概念。通过匹配那些对于软
 
 ### 4.1 Subject
 
-在我们的教程中已经提到，Subject实质上是一个当前执行用户的特定的安全“视图”。鉴于"User"一词通常意味着一个人，而一个Subject可以是一个人，但它还可以代表第三方服务，daemon account，cron job，或其他类似的任何东西——基本上是当前正与软件进行交互的任何东西。
+在我们的教程中已经提到，Subject实质上是一个当前执行用户的特定的安全“视图”。鉴于"User"一词通常意味着一个人，而一个Subject可以是一个人，但它还可以代表第三方服务，`daemon account`，`cron job`，或其他类似的任何东西——基本上是当前正与软件进行交互的任何东西。
 
-所有Subject实例都被绑定到（且这是必须的）一个SecurityManager上。当你与一个Subject交互时，那些交互作用转化为与SecurityManager交互的特定subject的交互作用。
+**所有Subject实例都被绑定到（且这是必须的）一个SecurityManager上。当你与一个Subject交互时，那些交互作用转化为与SecurityManager交互的特定subject的交互作用。**
 
 ### 4.2 SecurityManager
 
 SecurityManager是Shiro架构的心脏，并作为一种“保护伞”对象来协调内部的安全组件共同构成一个对象图。然而，一旦SecurityManager和它的内置对象图已经配置给一个应用程序，那么它单独留下来，且应用程序开发人员几乎使用他们所有的时间来处理Subject API。
 
-稍后会更详细地讨论SecurityManager，但重要的是要认识到，当你正与一个Subject进行交互时，实质上是幕后的 SecurityManager处理所有繁重的Subject安全操作。这反映在上面的基本流程图。
+稍后会更详细地讨论SecurityManager，但重要的是要认识到，**当你正与一个Subject进行交互时，实质上是幕后的 SecurityManager处理所有繁重的Subject安全操作**。这反映在上面的基本流程图。
 
 ### 4.3 Realms
 
-Realms担当Shiro和你的应用程序的安全数据之间的“桥梁”或“连接器”。当它实际上与安全相关的数据如用来执行身份验证（登录）及授权（访问控制）的用户帐户交互时，Shiro 从一个或多个为应用程序配置的Realm中寻找许多这样的东西。
+Realms担当Shiro和你的应用程序的安全数据之间的“桥梁”或“连接器”。**当它实际上与安全相关的数据如用来执行身份验证（登录）及授权（访问控制）的用户帐户交互时，Shiro 从一个或多个为应用程序配置的Realm中寻找许多这样的东西。**
 
 在这个意义上说，Realm本质上是一个特定安全的DAO：它封装了数据源的连接详细信息，使Shiro所需的相关的数据可用。当配置Shiro时，你必须指定至少一个Realm用来进行身份验证和/或授权。SecurityManager可能配置多个Realms，但至少有一个是必须的。
 
@@ -106,53 +106,53 @@ Shiro提供了立即可用的Realms来连接一些安全数据源（即目录）
 
 ![](https://image.ldbmcs.com/2019-04-24-070139.jpg)
 
-**Subject(org.apache.shiro.subject.Subject)**
+1. **Subject(org.apache.shiro.subject.Subject)**
 
-当前与软件进行交互的实体（用户，第三方服务，cron job，等等）的安全特定“视图”。
+   当前与软件进行交互的实体（用户，第三方服务，cron job，等等）的安全特定“视图”。
 
-**SecurityManager(org.apache.shiro.mgt.SecurityManager)**
+2. **SecurityManager(org.apache.shiro.mgt.SecurityManager)**
 
-如上所述，SecurityManager是Shiro架构的心脏。它基本上是一个“保护伞”对象，协调其管理的组件以确保它们能够一起顺利的工作。它还管理每个应用程序用户的Shiro 的视图，因此它知道如何执行每个用户的安全操作。
+   如上所述，SecurityManager是Shiro架构的心脏。它基本上是一个“保护伞”对象，协调其管理的组件以确保它们能够一起顺利的工作。它还管理每个应用程序用户的Shiro 的视图，因此它知道如何执行每个用户的安全操作。
 
-**Authenticator(org.apache.shiro.authc.Authenticator)**
+**3. Authenticator(org.apache.shiro.authc.Authenticator)**
 
-Authenticator是一个对执行及对用户的身份验证（登录）尝试负责的组件。当一个用户尝试登录时，该逻辑被 Authenticator执行。Authenticator知道如何与一个或多个Realm协调来存储相关的用户/帐户信息。从这些Realm中获得的数据被用来验证用户的身份来保证用户确实是他们所说的他们是谁。
+​	Authenticator是一个对执行及对用户的身份验证（登录）尝试负责的组件。当一个用户尝试登录时，该逻辑被 Authenticator执行。Authenticator知道如何与一个或多个Realm协调来存储相关的用户/帐户信息。从这些Realm中获得的数据被用来验证用户的身份来保证用户确实是他们所说的他们是谁。
 
-**Authentication Strategy(org.apache.shiro.authc.pam.AuthenticationStrategy)**
+4. **Authentication Strategy(org.apache.shiro.authc.pam.AuthenticationStrategy)**
 
-如果不止一个Realm被配置，则AuthenticationStrategy将会协调这些Realm来决定身份认证尝试成功或失败下的条件（例如，如果一个Realm成功，而其他的均失败，是否该尝试成功？是否所有的Realm必须成功？或只有第一个成功即可？）。
+   如果不止一个Realm被配置，则AuthenticationStrategy将会协调这些Realm来决定身份认证尝试成功或失败下的条件（例如，如果一个Realm成功，而其他的均失败，是否该尝试成功？是否所有的Realm必须成功？或只有第一个成功即可？）。
 
-**Authorizer(org.apache.shiro.authz.Authorizer)**
+5. **Authorizer(org.apache.shiro.authz.Authorizer)**
 
-Authorizer是负责在应用程序中决定用户的访问控制的组件。它是一种最终判定用户是否被允许做某事的机制。与 Authenticator相似，Authorizer也知道如何协调多个后台数据源来访问角色恶化权限信息。Authorizer使用该信息来准确地决定用户是否被允许执行给定的动作。
+   Authorizer是负责在应用程序中决定用户的访问控制的组件。它是一种最终判定用户是否被允许做某事的机制。与 Authenticator相似，Authorizer也知道如何协调多个后台数据源来访问角色恶化权限信息。Authorizer使用该信息来准确地决定用户是否被允许执行给定的动作。
 
-**SessionManager(org.apache.shiro.session.SessionManager)**
+6. **SessionManager(org.apache.shiro.session.SessionManager)**
 
-SessionManager知道如何去创建及管理用户Session生命周期来为所有环境下的用户提供一个强健的Session体验。这在安全框架界是一个独有的特色——Shiro拥有能够在任何环境下本地化管理用户Session的能力，即使没有可用的Web/Servlet或EJB容器，它将会使用它内置的企业级会话管理来提供同样的编程体验。SessionDAO的存在允许任何数据源能够在持久会话中使用。
+   SessionManager知道如何去创建及管理用户Session生命周期来为所有环境下的用户提供一个强健的Session体验。这在安全框架界是一个独有的特色——Shiro拥有能够在任何环境下本地化管理用户Session的能力，即使没有可用的Web/Servlet或EJB容器，它将会使用它内置的企业级会话管理来提供同样的编程体验。SessionDAO的存在允许任何数据源能够在持久会话中使用。
 
-**SessionDAO(org.apache.shiro.session.mgt.eis.SessionDAO)**
+7. **SessionDAO(org.apache.shiro.session.mgt.eis.SessionDAO)**
 
-SesssionDAO代表SessionManager执行Session持久化（CRUD）操作。这允许任何数据存储被插入到会话管理的基础之中。
+   SesssionDAO代表SessionManager执行Session持久化（CRUD）操作。这允许任何数据存储被插入到会话管理的基础之中。
 
-**CacheManager(org.apahce.shiro.cache.CacheManager)**
+8. **CacheManager(org.apahce.shiro.cache.CacheManager)**
 
-CacheManager创建并管理其他Shiro组件使用的Cache实例生命周期。因为Shiro能够访问许多后台数据源，由于身份验证，授权和会话管理，缓存在框架中一直是一流的架构功能，用来在同时使用这些数据源时提高性能。任何现代开源和/或企业的缓存产品能够被插入到Shiro来提供一个快速及高效的用户体验。
+   CacheManager创建并管理其他Shiro组件使用的Cache实例生命周期。因为Shiro能够访问许多后台数据源，由于身份验证，授权和会话管理，缓存在框架中一直是一流的架构功能，用来在同时使用这些数据源时提高性能。任何现代开源和/或企业的缓存产品能够被插入到Shiro来提供一个快速及高效的用户体验。
 
-**Cryptography(org.apache.shiro.crypto.*)**
+9. **Cryptography(org.apache.shiro.crypto.*)**
 
-Cryptography是对企业安全框架的一个很自然的补充。Shiro的crypto包包含量易于使用和理解的cryptographic Ciphers，Hasher（又名digests）以及不同的编码器实现的代表。所有在这个包中的类都被精心地设计以易于使用和易于理解。任何使用Java的本地密码支持的人都知道它可以是一个难以驯服的具有挑战性的动物。Shiro的cryptoAPI 简化了复杂的Java机制，并使加密对于普通人也易于使用。
+   Cryptography是对企业安全框架的一个很自然的补充。Shiro的crypto包包含量易于使用和理解的cryptographic Ciphers，Hasher（又名digests）以及不同的编码器实现的代表。所有在这个包中的类都被精心地设计以易于使用和易于理解。任何使用Java的本地密码支持的人都知道它可以是一个难以驯服的具有挑战性的动物。Shiro的cryptoAPI 简化了复杂的Java机制，并使加密对于普通人也易于使用。
 
-**Realms(org.apache.shiro.realm.Realm)**
+10. **Realms(org.apache.shiro.realm.Realm)**
 
-如上所述，Realms在Shiro和你的应用程序的安全数据之间担当“桥梁”或“连接器”。当它实际上与安全相关的数据如用来执行身份验证（登录）及授权（访问控制）的用户帐户交互时，Shiro从一个或多个为应用程序配置的Realm中寻找许多这样的东西。你可以按你的需要配置多个Realm（通常一个数据源一个Realm），且Shiro将为身份验证和授权对它们进行必要的协调。
+    如上所述，Realms在Shiro和你的应用程序的安全数据之间担当“桥梁”或“连接器”。当它实际上与安全相关的数据如用来执行身份验证（登录）及授权（访问控制）的用户帐户交互时，Shiro从一个或多个为应用程序配置的Realm中寻找许多这样的东西。你可以按你的需要配置多个Realm（通常一个数据源一个Realm），且Shiro将为身份验证和授权对它们进行必要的协调。
 
-**The SecurityManager**
+11. **The SecurityManager**
 
-因为Shiro的API鼓励一个以Subject为中心的编程方式，大多数应用程序开发人员很少，如果真有，与SecurityManager直接进行交互（框架开发人员有时候会觉得它很有用）。即便如此，了解如何SecurityManager是如何工作的仍然是很重要的，尤其是在为应用程序配置一个SecurityManager的时候。
+    因为Shiro的API鼓励一个以Subject为中心的编程方式，大多数应用程序开发人员很少，如果真有，与SecurityManager直接进行交互（框架开发人员有时候会觉得它很有用）。即便如此，了解如何SecurityManager是如何工作的仍然是很重要的，尤其是在为应用程序配置一个SecurityManager的时候。
 
-**Design**
+12. **Design**
 
-如前所述，应用程序的SecurityManager执行安全操作并管理所有应用程序用户的状态。在Shiro的默认SecurityManager实现中，这包括：
+    如前所述，应用程序的SecurityManager执行安全操作并管理所有应用程序用户的状态。在Shiro的默认SecurityManager实现中，这包括：
 
 - Authentication
 
