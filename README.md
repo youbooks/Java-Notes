@@ -8,10 +8,7 @@
 - [字符编码](https://ldbmcs.gitbook.io/java/ji-suan-ji-ji-chu/zi-fu-bian-ma)
 - [网络编程](https://ldbmcs.gitbook.io/java/ji-suan-ji-ji-chu/wang-luo-bian-cheng)
 - [网络安全](https://ldbmcs.gitbook.io/java/ji-suan-ji-ji-chu/wang-luo-an-quan)
-
-## 数据结构和算法
-- [数据结构](https://ldbmcs.gitbook.io/java/shu-ju-jie-gou-he-suan-fa/shu-ju-jie-gou)
-- [算法](https://ldbmcs.gitbook.io/java/shu-ju-jie-gou-he-suan-fa/suan-fa)
+- [数据结构和算法]()
 
 ## Java
 - [Java 基础](https://ldbmcs.gitbook.io/java/java/java-ji-chu)
@@ -49,41 +46,12 @@
 - [Zookeeper](https://ldbmcs.gitbook.io/java/fen-bu-shi/zookeeper)
 - 监控系统
 
-## 系统设计
+## 系统架构
 - [流量控制](https://ldbmcs.gitbook.io/java/xi-tong-she-ji/liu-liang-kong-zhi)
 - [秒杀系统](https://ldbmcs.gitbook.io/java/xi-tong-she-ji/miao-sha-xi-tong)
 - [红包系统](https://ldbmcs.gitbook.io/java/xi-tong-she-ji/hong-bao-xi-tong)
 
-## 运维&测试
-- [DevOps](https://ldbmcs.gitbook.io/java/yun-wei-ce-shi/devops)
+## 运维
 - [Docker](https://ldbmcs.gitbook.io/java/yun-wei-ce-shi/docker)
 - [Kubernetes](https://ldbmcs.gitbook.io/java/yun-wei-ce-shi/kubernetes)
-- [负载均衡](https://ldbmcs.gitbook.io/java/yun-wei-ce-shi/fu-zai-jun-heng)
-
-## 面试题
-
-### Java面试题
-
-- [计算机网络面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/ji-suan-ji-wang-luo-mian-shi-ti)
-- [数据结构与算法面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/shu-ju-jie-gou-yu-suan-fa-mian-shi-ti)
-- [Java基础面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/java-ji-chu-zhi-shi-mian-shi-ti)
-- [Java集合容器面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/java-ji-he-rong-qi-mian-shi-ti)
-- [Java并发编程面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/java-bing-fa-bian-cheng-mian-shi-ti)
-- [Java虚拟机面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/java-xu-ni-ji-mian-shi-ti)
-- [Spring面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/spring-mian-shi-ti)
-- [Spring MVC面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/spring-mvc-mian-shi-ti)
-- [Spring Boot面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/spring-boot-mian-shi-ti)
-- [Spring Cloud面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/spring-cloud-mian-shi-ti)
-- [MyBatis面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/mybatis-mian-shi-ti)
-- [MySQL数据库面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/mysql-shu-ju-ku-mian-shi-ti)
-- [Redis面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/redis-mian-shi-ti)
-- [分布式系统设计面试题](https://ldbmcs.gitbook.io/java/mian-shi-ti/java/fen-bu-shi-xi-tong-she-ji-mian-shi-ti)
-
-### SQL面试题
-
-- [LeetCode中SQL面试题(一)](https://ldbmcs.gitbook.io/java/mian-shi-ti/sql/leetcode-zhong-sql-mian-shi-ti-yi)
-
-## 个人成长
-
-## 其他
 
