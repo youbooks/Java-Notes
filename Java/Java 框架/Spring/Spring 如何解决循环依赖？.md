@@ -1,212 +1,301 @@
-> 转载：[Spring 如何解决循环依赖？](https://zhuanlan.zhihu.com/p/84267654)
+> 转载：[Spring-三级缓存和循环依赖](https://segmentfault.com/a/1190000023712597)
 
-在关于Spring的面试中，我们经常会被问到一个问题：**Spring是如何解决循环依赖的问题的**。
+## 1. 循环依赖
 
-这个问题算是关于Spring的一个高频面试题，因为如果不刻意研读，相信即使读过源码，面试者也不一定能够一下子思考出个中奥秘。
-
-本文主要针对这个问题，从源码的角度对其实现原理进行讲解。
-
-## 1. 过程演示
-
-关于Spring bean的创建，其本质上还是一个对象的创建，既然是对象，读者朋友一定要明白一点就是，一个完整的对象包含两部分：**当前对象实例化和对象属性的实例化**。
-
-在Spring中，对象的实例化是通过反射实现的，而对象的属性则是在对象实例化之后通过一定的方式设置的。
-
-这个过程可以按照如下方式进行理解：
-
-![2020-09-26-jtpTpZ](https://image.ldbmcs.com/2020-09-26-jtpTpZ.jpg)
-
-理解这一个点之后，对于循环依赖的理解就已经帮助一大步了，我们这里以两个类A和B为例进行讲解，如下是A和B的声明：
+什么是依赖注入？假设有两个类A和B，A在实例化的时候需要B的实例，而B在实例化时又需要A的实例，在类的实例化过程就陷入死循环。这也就是传统逻辑上的，“到底是先有鸡，还是先有蛋”的问题？
+下面举一个例子,定义了两个类Type和Org：
 
 ```java
+// Org.java
+@Data
 @Component
-public class A {
-  private B b;
-  public void setB(B b) {
-    this.b = b;
-  }
-}
-@Component
-public class B {
-  private A a;
-  public void setA(A a) {
-    this.a = a;
-  }
-}
-```
+public class Org {
+    private final Role role;
 
-可以看到，这里A和B中各自都以对方为自己的全局属性。这里首先需要说明的一点，**Spring实例化bean是通过`ApplicationContext.getBean(`)方法来进行的**。
-
-如果要获取的对象依赖了另一个对象，那么其首先会创建当前对象，然后通过递归的调用`ApplicationContext.getBean()`方法来获取所依赖的对象，最后将获取到的对象注入到当前对象中。
-
-这里我们以上面的首先初始化A对象实例为例进行讲解。
-
-首先Spring尝试通过`ApplicationContext.getBean()`方法获取A对象的实例，由于Spring容器中还没有A对象实例，因而其会创建一个A对象。
-
-然后发现其依赖了B对象，因而会尝试递归的通过`ApplicationContext.getBean()`方法获取B对象的实例。
-
-但是Spring容器中此时也没有B对象的实例，因而其还是会先创建一个B对象的实例。
-
-读者需要注意这个时间点，此时A对象和B对象都已经创建了，并且保存在Spring容器中了，只不过A对象的属性b和B对象的属性a都还没有设置进去。
-
-在前面Spring创建B对象之后，Spring发现B对象依赖了属性A，因而还是会尝试递归的调用`ApplicationContext.getBean()`方法获取A对象的实例。
-
-因为Spring中已经有一个A对象的实例，虽然只是半成品（其属性b还未初始化），但其也还是目标bean，因而会将该A对象的实例返回。
-
-此时，B对象的属性a就设置进去了，然后还是`ApplicationContext.getBean()`方法递归的返回，也就是将B对象的实例返回，此时就会将该实例设置到A对象的属性b中。
-
-这个时候，注意A对象的属性b和B对象的属性a都已经设置了目标对象的实例了。
-
-读者朋友可能会比较疑惑的是，前面在为对象B设置属性a的时候，这个A类型属性还是个半成品。但是需要注意的是，这个A是一个**引用**，其本质上还是最开始就实例化的A对象。
-
-而在上面这个递归过程的最后，Spring将获取到的B对象实例设置到了A对象的属性b中了。
-
-这里的A对象其实和前面设置到实例B中的半成品A对象是同一个对象，其引用地址是同一个，这里为A对象的b属性设置了值，其实也就是为那个半成品的a属性设置了值。
-
-下面我们通过一个流程图来对这个过程进行讲解：
-
-![2020-09-26-wHqqXi](https://image.ldbmcs.com/2020-09-26-wHqqXi.jpg)
-
-图中`getBean()`表示调用Spring的`ApplicationContext.getBean()`方法，而该方法中的参数，则表示我们要尝试获取的目标对象。
-
-图中的黑色箭头表示一开始的方法调用走向，走到最后，返回了Spring中缓存的A对象之后，表示递归调用返回了，此时使用绿色的箭头表示。
-
-从图中我们可以很清楚的看到，B对象的a属性是在第三步中注入的半成品A对象，而A对象的b属性是在第二步中注入的成品B对象，此时半成品的A对象也就变成了成品的A对象，因为其属性已经设置完成了。
-
-## 2. 源码讲解
-
-对于Spring处理循环依赖问题的方式，我们这里通过上面的流程图其实很容易就可以理解。
-
-需要注意的一个点，Spring是如何标记开始生成的A对象是一个半成品，并且是如何保存A对象的。
-
-这里的标记工作Spring是使用`ApplicationContext`的属性`SetsingletonsCurrentlyInCreation`来保存的，而半成品的A对象则是通过`MapsingletonFactories`来保存的。
-
-这里的`ObjectFactory`是一个工厂对象，可通过调用其`getObject()`方法来获取目标对象。在`AbstractBeanFactory.doGetBean()`方法中获取对象的方法如下：
-
-```java
-protected  T doGetBean(final String name, @Nullable final Class requiredType,
-    @Nullable final Object[] args, boolean typeCheckOnly) throws BeansException {
-  
-  // 尝试通过bean名称获取目标bean对象，比如这里的A对象
-  Object sharedInstance = getSingleton(beanName);
-  // 我们这里的目标对象都是单例的
-  if (mbd.isSingleton()) {
-    
-    // 这里就尝试创建目标对象，第二个参数传的就是一个ObjectFactory类型的对象，这里是使用Java8的lamada
-    // 表达式书写的，只要上面的getSingleton()方法返回值为空，则会调用这里的getSingleton()方法来创建
-    // 目标对象
-    sharedInstance = getSingleton(beanName, () -> {
-      try {
-        // 尝试创建目标对象
-        return createBean(beanName, mbd, args);
-      } catch (BeansException ex) {
-        throw ex;
-      }
-    });
-  }
-  return (T) bean;
-}
-```
-
-这里的doGetBean()方法是非常关键的一个方法（中间省略了其他代码），上面也主要有两个步骤：
-
-1. 第一个步骤的getSingleton()方法的作用是尝试从缓存中获取目标对象，如果没有获取到，则尝试获取半成品的目标对象；如果第一个步骤没有获取到目标对象的实例，那么就进入第二个步骤。
-
-2. 第二个步骤的getSingleton()方法的作用是尝试创建目标对象，并且为该对象注入其所依赖的属性。
-
-这里其实就是主干逻辑，我们前面图中已经标明，在整个过程中会调用三次`doGetBean()`方法。
-
-第一次调用的时候会尝试获取A对象实例，此时走的是第一个`getSingleton()`方法，由于没有已经创建的A对象的成品或半成品，因而这里得到的是null。
-
-然后就会调用第二个`getSingleton()`方法，创建A对象的实例，然后递归的调用doGetBean()方法，尝试获取B对象的实例以注入到A对象中。
-
-此时由于Spring容器中也没有B对象的成品或半成品，因而还是会走到第二个`getSingleton()`方法，在该方法中创建B对象的实例。
-
-创建完成之后，尝试获取其所依赖的A的实例作为其属性，因而还是会递归的调用`doGetBean()`方法。
-
-此时需要注意的是，在前面由于已经有了一个半成品的A对象的实例，因而这个时候，再尝试获取A对象的实例的时候，会走第一个`getSingleton()`方法。
-
-在该方法中会得到一个半成品的A对象的实例，然后将该实例返回，并且将其注入到B对象的属性a中，此时B对象实例化完成。
-
-然后，将实例化完成的B对象递归的返回，此时就会将该实例注入到A对象中，这样就得到了一个成品的A对象。
-
-我们这里可以阅读上面的第一个`getSingleton()`方法：
-
-```java
-@Nullable
-protected Object getSingleton(String beanName, boolean allowEarlyReference) {
-  
-  // 尝试从缓存中获取成品的目标对象，如果存在，则直接返回
-  Object singletonObject = this.singletonObjects.get(beanName);
-  
-  // 如果缓存中不存在目标对象，则判断当前对象是否已经处于创建过程中，在前面的讲解中，第一次尝试获取A对象
-  // 的实例之后，就会将A对象标记为正在创建中，因而最后再尝试获取A对象的时候，这里的if判断就会为true
-  if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
-    
-    synchronized (this.singletonObjects) {
-      singletonObject = this.earlySingletonObjects.get(beanName);
-      if (singletonObject == null && allowEarlyReference) {
-        
-        // 这里的singletonFactories是一个Map，其key是bean的名称，而值是一个ObjectFactory类型的
-        // 对象，这里对于A和B而言，调用图其getObject()方法返回的就是A和B对象的实例，无论是否是半成品
-        ObjectFactory singletonFactory = this.singletonFactories.get(beanName);
-        if (singletonFactory != null) {
-          
-          // 获取目标对象的实例
-          singletonObject = singletonFactory.getObject();
-          this.earlySingletonObjects.put(beanName, singletonObject);
-          this.singletonFactories.remove(beanName);
-        }
-      }
+    public Org(Role role) {
+        this.role = role;
     }
-  }
-  return singletonObject;
+}
+
+// Role.java
+@Data
+@Component
+public class Role {
+    private final Org org;
+
+    public Role(Org org) {
+        this.org = org;
+    }
 }
 ```
 
-这里我们会存在一个问题就是A的半成品实例是如何实例化的，然后是如何将其封装为一个`ObjectFactory`类型的对象，并且将其放到上面的`singletonFactories`属性中的。
-
-这主要是在前面的第二个`getSingleton()`方法中，其最终会通过其传入的第二个参数，从而调用`createBean()`方法，该方法的最终调用是委托给了另一个`doCreateBean()`方法进行的。
-
-这里面有如下一段代码：
+这是spring中典型的构造器注入方式，其实也代表了普通非spring bean之间，相互依赖时的实例化过程，但结果在运行的时候直接报循环依赖的错误：
 
 ```java
-protected Object doCreateBean(final String beanName, final RootBeanDefinition mbd, final @Nullable Object[] args)
-  throws BeanCreationException {
-  // 实例化当前尝试获取的bean对象，比如A对象和B对象都是在这里实例化的
-  BeanWrapper instanceWrapper = null;
-  if (mbd.isSingleton()) {
-    instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
-  }
-  if (instanceWrapper == null) {
-    instanceWrapper = createBeanInstance(beanName, mbd, args);
-  }
-  // 判断Spring是否配置了支持提前暴露目标bean，也就是是否支持提前暴露半成品的bean
-  boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences 
-    && isSingletonCurrentlyInCreation(beanName));
-  if (earlySingletonExposure) {
-    
-    // 如果支持，这里就会将当前生成的半成品的bean放到singletonFactories中，这个singletonFactories
-    // 就是前面第一个getSingleton()方法中所使用到的singletonFactories属性，也就是说，这里就是
-    // 封装半成品的bean的地方。而这里的getEarlyBeanReference()本质上是直接将放入的第三个参数，也就是
-    // 目标bean直接返回
-    addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
-  }
-  try {
-    // 在初始化实例之后，这里就是判断当前bean是否依赖了其他的bean，如果依赖了，
-    // 就会递归的调用getBean()方法尝试获取目标bean
-    populateBean(beanName, mbd, instanceWrapper);
-  } catch (Throwable ex) {
-    // 省略...
-  }
-  return exposedObject;
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+The dependencies of some of the beans in the application context form a cycle:
+
+   demoController (field private pers.kerry.exercise.springexercise.pojo.Org pers.kerry.exercise.springexercise.controller.DemoController.org)
+┌─────┐
+|  org defined in file [/Users/kerry/code/idea/spring-exercise/target/classes/pers/kerry/exercise/springexercise/pojo/Org.class]
+↑     ↓
+|  role defined in file [/Users/kerry/code/idea/spring-exercise/target/classes/pers/kerry/exercise/springexercise/pojo/Role.class]
+└─────┘
+```
+
+而如果我们改一下代码，把构造器注入方式改成基于属性的注入（@Autowired、@Resouce），奇怪的是不报错了，而且相互依赖的两个bean 都实例化成功了。说明spring框架有解决循环依赖的问题，我们了解spring解决循环依赖的过程，其实有助于进一步了解spring 中 bean的活动过程。
+
+## 2. 三级缓存
+
+我们在之前介绍Bean的生命周期时说过，spring 中 bean的实例化过程，并非只是调用构造方法。除去spring框架本身提供的一些钩子或扩展方法，简单分成下面三个核心方法：
+
+Spring在创建Bean的过程中分为三步
+
+1. 实例化，对应方法：AbstractAutowireCapableBeanFactory中的createBeanInstance方法，简单理解就是new了一个对象。
+2. 属性注入，对应方法：AbstractAutowireCapableBeanFactory的populateBean方法，为实例化中new出来的对象填充属性和注入依赖。
+3. 初始化，对应方法：AbstractAutowireCapableBeanFactory的initializeBean，执行aware接口中的方法，初始化方法，完成AOP代理。
+
+从单例Bean的初始化来看，主要可能发生循环依赖的环节就在第二步`populate`。值得注意的是，`基于构造方法注入`的方式，其实是将第一步和第二步同时进行，因此马上就抛出错误。而spring通过`基于属性注入`的方式，是否有其他特殊的处理呢，我们这时候就要提到spring的三级缓存：
+
+- private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
+- private final Map<String, Object> earlySingletonObjects = new HashMap<>(16);
+- private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
+
+| 缓存                  | 说明                                                         |
+| --------------------- | ------------------------------------------------------------ |
+| singletonObjects      | 第一级缓存，存放可用的完全初始化，成品的Bean。               |
+| earlySingletonObjects | 第二级缓存，存放半成品的Bean，半成品的Bean是已创建对象，但是未注入属性和初始化。用以解决循环依赖。 |
+| singletonFactories    | 第三级缓存，存的是Bean工厂对象，用来生成半成品的Bean并放入到二级缓存中。用以解决循环依赖。如果Bean存在AOP的话，返回的是AOP的代理对象。 |
+
+## 3. 核心方法：getSingleton
+
+我们在获取bean实例的时候，其实是先从三级缓存中获取，`getBean` 方法的逻辑如下：
+
+```java
+Object sharedInstance = getSingleton(beanName);
+
+public Object getSingleton(String beanName) {
+    return getSingleton(beanName, true);
+}
+
+protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+    // 查询缓存中是否有创建好的单例
+    Object singletonObject = this.singletonObjects.get(beanName);
+    // 如果缓存不存在，判断是否正在创建中
+    if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+        // 加锁防止并发
+        synchronized (this.singletonObjects) {
+            // 从earlySingletonObjects中查询是否有early缓存
+            singletonObject = this.earlySingletonObjects.get(beanName);
+            // early缓存也不存在，且允许early引用
+            if (singletonObject == null && allowEarlyReference) {
+                // 从单例工厂Map里查询beanName
+                ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+                if (singletonFactory != null) {
+                    // singletonFactory存在，则调用getObject方法拿到单例对象
+                    singletonObject = singletonFactory.getObject();
+                    // 将单例对象添加到early缓存中
+                    this.earlySingletonObjects.put(beanName, singletonObject);
+                    // 移除单例工厂中对应的singletonFactory
+                    this.singletonFactories.remove(beanName);
+                }
+            }
+        }
+    }
+    return (singletonObject != NULL_OBJECT ? singletonObject : null);
 }
 ```
 
-到这里，Spring整个解决循环依赖问题的实现思路已经比较清楚了。对于整体过程，读者朋友只要理解两点：
+1. 只针对单例的bean，多例的后面讨论
+2. 默认的singletonObjects缓存不存在要get的beanName时，判断beanName是否正在创建中
+3. 从early缓存earlySingletonObjects中再查询，early缓存是用来缓存已实例化但未组装完成的bean
+4. 如果early缓存也不存在，从singletonFactories中查找是否有beanName对应的ObjectFactory对象工厂
+5. 如果对象工厂存在，则调用getObject方法拿到bean对象
+6. 将bean对象加入early缓存，并移除singletonFactories的对象工厂
 
-- Spring是通过递归的方式获取目标bean及其所依赖的bean的；
-- Spring实例化一个bean的时候，是分两步进行的，首先实例化目标bean，然后为其注入属性。
+这是 `getBean`的逻辑，三级缓存中一级一级地找匹配的Bean，直到最后一级缓存，通过匹配beanName 的 ObjectFactory 来获取Bean。那么singletonFactories何时放入了可以通过getObject获得bean对象的ObjectFactory呢？
 
-结合这两点，也就是说，Spring在实例化一个bean的时候，是首先递归的实例化其所依赖的所有bean，直到某个bean没有依赖其他bean，此时就会将该实例返回，然后反递归的将获取到的bean设置为各个上层bean的属性的。
+## 4. 核心方法：doCreateBean
+
+Bean的实例化，实际执行的源码是AbstractAutowireCapableBeanFactory类的doCreateBean方法：
+
+```java
+ protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args) throws BeanCreationException {
+        // 1、创建一个对bean原始对象的包装对象-BeanWrapper，执行createBeanInstance，即构造方法或工厂方法，给BeanWrapper赋值
+        BeanWrapper instanceWrapper = null;
+        if (mbd.isSingleton()) {
+            instanceWrapper = (BeanWrapper)this.factoryBeanInstanceCache.remove(beanName);
+        }
+        if (instanceWrapper == null) {
+            instanceWrapper = this.createBeanInstance(beanName, mbd, args);
+        }
+
+        Object bean = instanceWrapper.getWrappedInstance();
+        Class<?> beanType = instanceWrapper.getWrappedClass();
+        if (beanType != NullBean.class) {
+            mbd.resolvedTargetType = beanType;
+        }
+        // 2、允许其他修改beanDefinition，如使用Annotation增强Bean定义等，这通过类MergedBeanDefinitionPostProcessor来完成
+        synchronized(mbd.postProcessingLock) {
+            if (!mbd.postProcessed) {
+                try {
+                    this.applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
+                } catch (Throwable var17) {
+                    throw new BeanCreationException(mbd.getResourceDescription(), beanName, "Post-processing of merged bean definition failed", var17);
+                }
+
+                mbd.postProcessed = true;
+            }
+        }
+        // 3、将当前bean 的 ObjetFactory放入singletonFactories中， 
+        boolean earlySingletonExposure = mbd.isSingleton() && this.allowCircularReferences && this.isSingletonCurrentlyInCreation(beanName);
+        if (earlySingletonExposure) {
+            if (this.logger.isTraceEnabled()) {
+                this.logger.trace("Eagerly caching bean '" + beanName + "' to allow for resolving potential circular references");
+            }
+
+            this.addSingletonFactory(beanName, () -> {
+                return this.getEarlyBeanReference(beanName, mbd, bean);
+            });
+        }
+
+        Object exposedObject = bean;
+        // 4、执行 populateBean，设置属性值
+        // 5、执行 initializeBean，调用 Bean的初始化方法
+        try {
+            this.populateBean(beanName, mbd, instanceWrapper);
+            exposedObject = this.initializeBean(beanName, exposedObject, mbd);
+        } catch (Throwable var18) {
+            if (var18 instanceof BeanCreationException && beanName.equals(((BeanCreationException)var18).getBeanName())) {
+                throw (BeanCreationException)var18;
+            }
+
+            throw new BeanCreationException(mbd.getResourceDescription(), beanName, "Initialization of bean failed", var18);
+        }
+        // 6、再次处理循环依赖问题
+        if (earlySingletonExposure) {
+            Object earlySingletonReference = this.getSingleton(beanName, false);
+            if (earlySingletonReference != null) {
+                if (exposedObject == bean) {
+                    exposedObject = earlySingletonReference;
+                } else if (!this.allowRawInjectionDespiteWrapping && this.hasDependentBean(beanName)) {
+                    String[] dependentBeans = this.getDependentBeans(beanName);
+                    Set<String> actualDependentBeans = new LinkedHashSet(dependentBeans.length);
+                    String[] var12 = dependentBeans;
+                    int var13 = dependentBeans.length;
+
+                    for(int var14 = 0; var14 < var13; ++var14) {
+                        String dependentBean = var12[var14];
+                        if (!this.removeSingletonIfCreatedForTypeCheckOnly(dependentBean)) {
+                            actualDependentBeans.add(dependentBean);
+                        }
+                    }
+
+                    if (!actualDependentBeans.isEmpty()) {
+                        throw new BeanCurrentlyInCreationException(beanName, "Bean with name '" + beanName + "' has been injected into other beans [" + StringUtils.collectionToCommaDelimitedString(actualDependentBeans) + "] in its raw version as part of a circular reference, but has eventually been wrapped. This means that said other beans do not use the final version of the bean. This is often the result of over-eager type matching - consider using 'getBeanNamesForType' with the 'allowEagerInit' flag turned off, for example.");
+                    }
+                }
+            }
+        }
+        // 7、注册bean的销毁回调方法，在beanFactory中注册销毁通知，以便在容器销毁时，能够做一些后续处理工作
+        try {
+            this.registerDisposableBeanIfNecessary(beanName, bean, mbd);
+            return exposedObject;
+        } catch (BeanDefinitionValidationException var16) {
+            throw new BeanCreationException(mbd.getResourceDescription(), beanName, "Invalid destruction signature", var16);
+        }
+    }
+```
+
+> BeanWrapper
+
+BeanWrapper接口，作为spring内部的一个核心接口，正如其名，它是bean的包裹类，即在内部中将会保存该bean的实例，提供其它一些扩展功能。同时，BeanWrapper接口还继承了PropertyAccessor, propertyEditorRegistry, TypeConverter、ConfigurablePropertyAccessor接口，所以它还提供了访问bean的属性值、属性编辑器注册、类型转换等功能。
+
+我们回顾一下bean的实例化过程：
+
+1. ResourceLoader加载配置信息
+2. BeanDefinitionReader读取并解析<bean>标签，并将<bean>标签的属性转换为BeanDefinition对应的属性，并注册到BeanDefinitionRegistry注册表中。
+3. 容器扫描BeanDefinitionRegistry注册表，通过反射机制获取BeanFactoryPostProcessor类型的工厂后处理器，并用这个工厂后处理器对BeanDefinition进行加工。
+4. 根据处理过的BeanDefinition，实例化bean。然后BeanWrapper结合BeanDefinitionRegistry和PropertyEditorRegistry对Bean的属性赋值。
+
+## 4. 思考和总结
+
+### 4.1. 问题：多例的循环依赖可以解决吗
+
+单例bean的循环引用是因为每个对象都是固定的，只是提前暴露对象的引用，最终这个引用对应的对象是创建完成的。但是多例的情况下，每次getBean都会创建一个新的对象，那么应该引用哪一个对象呢，这本身就已经是矛盾的了。多实例Bean是每次创建都会调用doGetBean方法，根本没有使用一二三级缓存，肯定不能解决循环依赖。因而spring中对于多例之间相互引用是会提示错误的。
+
+```java
+Error creating bean with name 'beanA': Requested bean is currently in creation: Is there an unresolvable circular reference?
+```
+
+可见spring会认为多例之间的循环引用是无法解决的。
+
+### 4.2. 问题：构造器、setter注入方式的循环依赖可以解决吗
+
+这里还是拿A和B两个Bean举例说明：
+
+| 注入方式                                           | 是否解决循环依赖 |
+| -------------------------------------------------- | ---------------- |
+| 均采用setter方法注入                               | 是               |
+| 均采用构造器注入                                   | 否               |
+| A中注入B的方式为setter方法，B中注入A的方式为构造器 | 是               |
+| B中注入A的方式为setter方法，A中注入B的方式为构造器 | 否               |
+
+### 4.3. 问题：为什么是三级缓存，二级不行吗？
+
+我们再整理一下spring解决循环依赖的过程：一级缓存singletonObject存储成品的Bean，二级缓存earlySingletonObject存储半成品的Bean，当出现循环依赖时可以先注入earlySingletonObject中的Bean实例。那三级缓存singletonFactory存在的意义何在？
+
+singletonFactory 存储的对象工厂是 ObjectFactory，这是一个函数式接口，唯一抽象方法是getObject。在doCreateBean方法的第三步addSingletonFactory，往singletonFactory添加ObjectFactory的匿名内部类中，返回对象的方法是getEarlyBeanReference。
+
+```java
+this.addSingletonFactory(beanName, () -> {
+                return this.getEarlyBeanReference(beanName, mbd, bean);
+            });
+```
+
+我们再看看 getEarlyBeanReference 的方法实现：
+
+```java
+protected Object getEarlyBeanReference(String beanName, RootBeanDefinition mbd, Object bean) {
+    Object exposedObject = bean;
+    if (bean != null && !mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+        for (BeanPostProcessor bp : getBeanPostProcessors()) {
+            if (bp instanceof SmartInstantiationAwareBeanPostProcessor) {
+                SmartInstantiationAwareBeanPostProcessor ibp = (SmartInstantiationAwareBeanPostProcessor) bp;
+                exposedObject = ibp.getEarlyBeanReference(exposedObject, beanName);
+                if (exposedObject == null) {
+                    return exposedObject;
+                }
+            }
+        }
+    }
+    return exposedObject;
+}
+```
+
+这里也设置了一个InstantiationAwareBeanPostProcessor后置处理器的扩展点，允许在对象返回之前修改甚至替换bean，总的来说，这是某一AOP方法的实现步骤。因此如果存在 AOP的定义，singletonFactory返回的不是原始的Bean实例，而是实现AOP方法的代理类。
+
+那么如果在doCreateBean方法中，直接生成Bean基于AOP的代理对象，将代理对象存入二级缓存earlySingleton，是不是还是可以不需要三级缓存singletonFactory呢？
+
+如果这么做了，就把AOP中创建代理对象的时机提前了，不管是否发生循环依赖，都在doCreateBean方法中完成了AOP的代理。不仅没有必要，而且违背了Spring在结合AOP跟Bean的生命周期的设计！Spring结合AOP跟Bean的生命周期本身就是通过AnnotationAwareAspectJAutoProxyCreator这个后置处理器来完成的，在这个后置处理的postProcessAfterInitialization方法中对初始化后的Bean完成AOP代理。**如果出现了循环依赖，那没有办法，只有给Bean先创建代理，但是没有出现循环依赖的情况下，设计之初就是让Bean在生命周期的最后一步完成代理而不是在实例化后就立马完成代理。**
+
+因此在三级缓存的架构中，earlySingletonObject 和 singletonFactory 的意义在于：
+
+- **三级缓存singletonFactory**：暴露ObjectFactory目的是为了完成AOP代理。对象工厂清楚如何创建对象的AOP代理，但是不会立马创建，而是到合适的时机进行AOP代理对象的创建。
+- **二级缓存earlySingletonObject**：存在的目的之一是保证对象只有一次AOP代理。当调用三级缓存的getObject()方法返回的对象会存入二级缓存，这样，当接下来的依赖者调用的时候， 会先判断二级缓存是否有目标对象，如果存在直接返回。
+
+> 既然有了三级缓存了，为什么还要设计二级缓存呢？可能很多人觉得二级缓存是个鸡肋，可有可无，其实这是Spring大量使用缓存提高性能的一点体现。每次都通过工厂去拿，需要遍历所有的后置处理器、判断是否创建代理对象，而判断是否创建代理对象本身也是一个复杂耗时的过程。设计二级缓存避免再次调用调用getEarlyBeanReference方法，提高bean加载流程。只能说，Spring是个海洋。
+
+### 4.4. 总结
+
+我们再回顾spring中循环依赖的解决流程，网上看到一个流程图很能清晰的说明其中过程。
+
+![2020-12-25-r0Bq5e](https://image.ldbmcs.com/2020-12-25-r0Bq5e.jpg)
+
+Spring通过三级缓存解决了循环依赖。一级缓存为单例池，二级缓存为早期曝光对象，三级缓存为早期曝光对象工厂。当A、B两类发生循环引用，在A实例化之后，将自己提早曝光(即加入三级缓存)，如果A初始AOP代理，该工厂对象返回的是被代理的对象，若未被代理，返回对象本身。当A进行属性注入时，经过之前实例化步骤，此时轮到B属性注入，调用getBean(a)获取A对象，由于A处理正在创建集合中，此时也发了循环依赖，所以可以从三级缓存获取对象工厂(如果A被AOP代理，此时返回就是代理对象)，并把对象放到二级缓存中，这样保证A只经过一次AOP代理。接下来，B走完Spring生命周期流程，并放入单例池中。当B创建完后，会将B注入A，A走完Spring生命周期流程。到此，循环依赖结束。
 
