@@ -1,4 +1,8 @@
-原文链接：https://crowhawk.github.io/2017/08/21/jvm_4/
+# JVM基础 - 如何优化Java GC
+
+[TOC]
+
+> 原文链接：https://crowhawk.github.io/2017/08/21/jvm_4/
 
 本文是“成为Java GC专家”系列文章的第三篇，在系列的第一篇文章[《理解Java GC》](http://www.cubrid.org/blog/understanding-java-garbage-collection)中，我们了解到了不同GC算法的执行过程、GC的工作原理、新生代和老年代的概念、JDK 7中你需要了解的5种GC类型以及每一种GC对性能的影响。
 

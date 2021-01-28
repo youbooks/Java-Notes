@@ -2,11 +2,11 @@
 
 [TOC]
 
-> 原文链接: https://crowhawk.github.io/2017/08/21/jvm_5/
-
 > 在Class文件中描述的各种信息，最终都需要加载到虚拟机中之后才能运行和使用。而虚拟机中，而虚拟机如何加载这些Class文件？Class文件中的信息进入到虚拟机中会发生什么变化？本文将逐步解答这些问题。
 
-## 1. 类加载过程概览
+## 1. 类加载的生命周期
+
+### 1.1 类加载过程概览
 
 类从被加载到虚拟机内存中开始，到卸载出内存为止，它的整个生命周期包括以下7个阶段：
 
@@ -24,7 +24,7 @@
 
 在上图中，加载、验证、准备、初始化和卸载这5个阶段的顺序是确定的，类的加载过程必须按照这种顺序按部就班地开始（开始而不是完成，这些阶段是互相交叉着进行的，在一个阶段执行过程中就会激活另一个阶段），而解析阶段则不一定：它在某些情况下可以在初始化阶段之后再开始，这是为了支持Java的**运行时绑定（也称为动态绑定或晚期绑定）**。
 
-## 2. 类初始化的时机
+### 1.2 类初始化的时机
 
 对于类加载过程的第一个阶段：加载，jvm规范中并没有进行强制约束其开始时机，可交由jvm的具体实现来自由把握。但是对于初始化阶段，jvm规范严格规定了有且只有下列5种情况必须对类进行**“初始化”**（很自然地，加载、验证、准备需要在此之前开始）：
 
@@ -42,9 +42,9 @@
 
 **接口的加载过程**和类加载过程略有不同，它们真正的区别在于在前文提到的5种需要开始初始化场景中的第3种：当一个类在初始化时，要求其父类全部都已经初始化过了，但是一个接口在初始化时，并不要求其**父接口**全部都完成了初始化，只有在真正使用到父接口的时候（如引用接口中定义的常量）才会初始化。
 
-## 3. 类加载过程详解
+### 1.3 类加载过程详解
 
-### 3.1 加载
+#### 1.3.1 加载
 
 **加载**是**类加载（Class Loading）**过程的一个阶段，两者不要混淆。虚拟机规范规定了在在加载阶段，jvm需要完成以下三件事情：
 
@@ -74,7 +74,7 @@
 
 **加载阶段完成后**，虚拟机**外部的二进制字节流**就按照虚拟机所需的格式**存储在方法区之中**，方法区的数据存储格式由虚拟机实现自行定义，虚拟机规范未规定此区域的具体数据结构。然后在内存中**实例化一个java.lang.Class类的对象**（并无明确规定是在Java 堆中，**对于HotSpot虚拟机而言，Class对象比较特殊，它虽是对象，但存放在方法区里**），这个对象将作为程序访问方法区中的这些类型数据的外部接口。
 
-### 3.2 验证
+#### 1.3.2 验证
 
 验证是连接阶段的第一步，这一阶段的目的是确保**输入的Class文件的字节流能正确地解析并存储于方法区之内**，格式上符合描述一个Java类型信息的要求，并且不会危害虚拟机自身的安全。验证阶段是否严谨，直接决定了Java虚拟机是否能承受恶意代码的攻击。 从整体上看，验证阶段大致上会完成下面四个阶段的检验动作：文件格式验证、元数据验证、字节码验证、符号引用验证。
 
@@ -120,7 +120,7 @@
 
 对于jvm的类加载机制来说，验证阶段是一个非常重要但不是一定必要（因为对运行期没有影响）的阶段。如果所运行的全部代码都已经被反复验证过，那么在实施阶段就可以考虑使用`-Xverify:none`参数来关闭大部分的类验证措施，以缩短虚拟机类加载的时间。
 
-### 3.3 准备
+#### 1.3.3 准备
 
 准备阶段的主要任务是如下两点：
 
@@ -145,7 +145,7 @@ public static final int value = 123;
 
 **编译时**Javac将会为value生成ConstantValue属性，在准备阶段虚拟机就会根据ConstantValue的设置将value赋值为123。
 
-### 3.4 解析
+#### 1.3.4 解析
 
 解析阶段是虚拟机将**常量池**内的**符号引用**替换为**直接引用**的过程。符号引用和直接引用的关联如下：
 
@@ -168,7 +168,7 @@ public static final int value = 123;
 
 其中后三种与java的动态语言支持息息相关。
 
-### 3.5 初始化
+#### 1.3.5 初始化
 
 类初始化阶段是“类加载过程”中最后一步，在之前的阶段，除了在加载阶段用户应用程序可以通过自定义类加载器参与之外，其它动作完全由虚拟机主导和控制，直到初始化阶段，才真正开始**执行类中定义的Java程序代码（或者说是字节码）**。
 
@@ -189,6 +189,7 @@ public static final int value = 123;
   ```
 
 - `<clinit>()`方法与类的构造函数（或者说实例构造器`<init>()` 方法）不同，不需要显式的调用父类的()方法。虚拟机会自动保证在子类的`<clinit>()`方法运行之前，父类的`<clinit>()`方法已经执行结束。因此虚拟机中第一个执行`<clinit>()`方法的类肯定为`java.lang.Object`。
+
 - 由于父类的`<clinit>()`方法先执行，也就意味着父类中定义的静态语句块要优于子类的变量赋值操作。例如以下代码：
 
   ```java
@@ -209,10 +210,188 @@ public static final int value = 123;
   ```
 
 - `<clinit>()`方法对于类或接口不是必须的，如果一个类中不包含静态语句块，也没有对类变量的赋值操作，编译器可以不为该类生成`<clinit>()`方法。
+
 - 接口中不可以使用静态语句块，但仍然有类变量初始化的赋值操作，因此接口与类一样都会生成`<clinit>()`方法。但接口与类不同的是，执行接口的`<clinit>()`方法不需要先执行父接口的`<clinit>()`方法。只有当父接口中定义的变量使用时，父接口才会初始化。另外，接口的实现类在初始化时也一样不会执行接口的`<clinit>()`方法。
+
 - 虚拟机会保证一个类的`<clinit>()`方法在多线程环境下被正确的加锁和同步，如果多个线程同时初始化一个类，只会有一个线程执行这个类的`<clinit>()`方法，其它线程都会阻塞等待，直到活动线程执行`<clinit>()`方法完毕。如果在一个类的`<clinit>()`方法中有耗时的操作，就可能造成多个进程阻塞，在实际过程中此种阻塞很隐蔽。
 
-## 4. 参考资料
+## 2. 类加载器
+
+虚拟机设计团队把类加载阶段中的**“通过一个类的全限定名来获取描述此类的二进制字节流(即字节码)”**这个动作放到Java虚拟机外部去实现，以便让应用程序自己决定如何去获取所需要的类。实现这个动作的代码模块称为**“类加载器”**。
+
+一般来说，Java 虚拟机使用 Java 类的方式如下：
+
+1. **Java 源程序（.java 文件）**在经过 Java 编译器**编译**之后就被转换成**字节码（.class 文件）**。
+2. 类加载器负责读取 Java 字节代码，并转换成 `java.lang.Class`类的一个实例。每个这样的实例用来表示一个 Java 类。通过此实例的 `newInstance()`方法就可以创建出该类的一个对象。
+
+实际的情况可能更加复杂，比如 Java 字节代码可能是通过工具动态生成的，也可能是通过网络下载的。更详细的内容可以参考上一篇文章中讲类加载过程中的加载阶段时介绍的几个例子（JAR包、Applet、动态代理、JSP等）。
+
+### 2.1 类与类加载器
+
+类加载器虽然只用于实现类的加载动作，但它在Java程序起到的作用却远大于类加载阶段。对于任意一个类，都需要由**加载它的类加载器和这个类本身**一同确立**其在Java虚拟机中的唯一性**，每一个类加载器，都拥有一个独立的类名称空间。通俗而言：比较两个类是否“相等”（这里所指的“相等”，包括类的Class对象的equals()方法、isAssignableFrom()方法、isInstance()方法的返回结果，也包括使用instanceof()关键字对做对象所属关系判定等情况），只有在这两个类时由同一个类加载器加载的前提下才有意义，否则，即使这两个类来源于同一个Class文件，被同一个虚拟机加载，只要加载它们的类加载器不同，那这两个类就必定不相等。
+
+### 2.2 双亲委派模型
+
+从jvm的角度来讲，只存在以下两种不同的类加载器：
+
+- **启动类加载器（Bootstrap ClassLoader）**，这个类加载器用C++实现，是虚拟机自身的一部分；
+- **所有其他类的加载器**，这些类由Java实现，独立于虚拟机外部，并且全都继承自抽象类`java.lang.ClassLoader`。
+
+从Java开发人员的角度看，类加载器可以划分得更细致一些：
+
+- **启动类加载器（Bootstrap ClassLoader）** 此类加载器负责将存放在` <JAVA_HOME>\lib `目录中的，或者被 `-Xbootclasspath` 参数所指定的路径中的，并且是虚拟机识别的（仅按照文件名识别，如 rt.jar，名字不符合的类库即使放在lib 目录中也不会被加载）类库加载到虚拟机内存中。 启动类加载器无法被 Java 程序直接引用，用户在编写自定义类加载器时，如果需要把加载请求委派给引导类加载器，直接使用null代替即可。
+- **扩展类加载器（Extension ClassLoader）** 这个类加载器是由`ExtClassLoader（sun.misc.Launcher$ExtClassLoader）`实现的。它负责将`<Java_Home>/lib/ext`或者被 `java.ext.dir`系统变量所指定路径中的所有类库加载到内存中，开发者可以直接使用扩展类加载器。
+- **应用程序类加载器（Application ClassLoader）** 这个类加载器是由 `AppClassLoader（sun.misc.Launcher$AppClassLoader）`实现的。由于这个类加载器是`ClassLoader`中的`getSystemClassLoader()`方法的返回值，因此一般称为**系统类加载器**。它负责加载**用户类路径（ClassPath）**上所指定的类库，开发者可以直接使用这个类加载器，如果应用程序中没有自定义过自己的类加载器，一般情况下这个就是程序中默认的类加载器。
+
+由开发人员开发的应用程序都是由这三种类加载器相互配合进行加载的，如果有必要，还可以加入自己定义的类加载器。这些类加载器的关系一般如下图所示：
+
+![](https://image.ldbmcs.com/2019-07-10-142841.jpg)
+
+上图展示的类加载器之间的层次关系，称为类加载器的**双亲委派模型（Parents Delegation Model）**。该模型要求除了顶层的启动类加载器外，其余的类加载器都应有自己的父类加载器，这里类加载器之间的父子关系一般通过**组合（Composition）**关系来实现，而不是通过继承（Inheritance）的关系实现。
+
+**工作过程**
+
+如果一个类加载器收到了类加载的请求，它首先不会自己去尝试加载，而是把这个请求委派给父类加载器，每一个层次的加载器都是如此，依次递归，因此所有的加载请求**最终都应该传送到顶层的启动类加载器中**，只有当父加载器反馈自己无法完成此加载请求（它搜索范围中没有找到所需类）时，子加载器才会尝试自己加载。
+
+**优点**
+
+使用双亲委派模型来组织类加载器之间的关系，使得Java类随着它的类加载器一起具备了一种**带有优先级的层次关系**。例如类`java.lang.Object`，它存放再`rt.jar`中，无论哪个类加载器要加载这个类，最终都是委派给处于模型最顶端的启动类加载器进行加载，因此Object类在程序的各种类加载器环境中都是同一个类。
+
+相反，如果没有双亲委派模型，由各个类加载器自行加载的话，如果用户编写了一个称为`java.lang.Object`的类，并放在程序的ClassPath中，那系统中将会出现多个不同的Object类，程序将变得一片混乱。如果开发者尝试编写一个与`rt.jar`类库中已有类重名的Java类，将会发现可以正常编译，但是永远无法被加载运行。
+
+双亲委派模型的实现如下：
+
+```java
+protected synchronized Class<?> loadClass(String name,boolean resolve)throws ClassNotFoundException{
+    //check the class has been loaded or not
+    Class c = findLoadedClass(name);
+    if(c == null){
+        try{
+            if(parent != null){
+                c = parent.loadClass(name,false);
+            }else{
+                c = findBootstrapClassOrNull(name);
+            }
+        }catch(ClassNotFoundException e){
+            //if throws the exception ,the father can not complete the load
+        }
+        if(c == null){
+            c = findClass(name);
+        }
+    }
+    if(resolve){
+        resolveClass(c);
+    }
+    return c;
+```
+
+### 2.3 破坏双亲委派模型
+
+#### 2.3.1 线程上下文类加载器
+
+双亲委派模型并不能解决 Java 应用开发中会遇到的类加载器的全部问题。Java 提供了很多**服务提供者接口（Service Provider Interface，SPI）**，允许第三方为这些接口提供实现。常见的 SPI 有 **JDBC、JCE、JNDI、JAXP 和 JBI** 等。这些 **SPI 的接口由 Java 核心库来提供**，如 JAXP 的 SPI 接口定义包含在 `javax.xml.parsers`包中。这些 SPI 的实现代码很可能是作为 Java 应用所依赖的 **jar 包**被包含进来，可以通过类路径（ClassPath）来找到，如实现了 JAXP SPI 的 Apache Xerces所包含的 jar 包。**SPI 接口中的代码经常需要加载具体的实现类。**如 JAXP 中的 `javax.xml.parsers.DocumentBuilderFactory`类中的 `newInstance()` 方法用来生成一个新的 `DocumentBuilderFactory` 的实例。这里的实例的真正的类是继承自 `javax.xml.parsers.DocumentBuilderFactory`，由 SPI 的实现所提供的。如在 Apache Xerces 中，实现的类是 org.apache.xerces.jaxp.DocumentBuilderFactoryImpl。而问题在于，**SPI 的接口**是**Java 核心库**的一部分，是**由引导类加载器加载**的，而**SPI 实现的 Java 类**一般是**由系统类加载器加载**的。引导类加载器是无法找到 SPI 的实现类的，因为它只加载 Java 的核心库。它也不能委派给系统类加载器，因为它是系统类加载器的祖先类加载器。也就是说，类加载器的双亲委派模型无法解决这个问题。
+
+为了解决这个问题，Java设计团队只好引入了一个不太优雅的设计：**线程上下文类加载器（Thread Context ClassLoader）**。线程上下文类加载器是从 JDK 1.2 开始引入的。类 `java.lang.Thread`中的方法` getContextClassLoader()`和 `setContextClassLoader(ClassLoader cl)`用来获取和设置线程的上下文类加载器。如果没有通过 `setContextClassLoader(ClassLoader cl)`方法进行设置的话，线程将继承其父线程的上下文类加载器。Java 应用运行的初始线程的上下文类加载器是应用程序类加载器。在线程中运行的代码可以通过此类加载器来加载类和资源。
+
+```java
+public static <S> ServiceLoader<S> load(Class<S> service) {
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    return ServiceLoader.load(service, cl);
+}
+```
+
+有了线程上下文类加载器，就可以做一些“舞弊”的事情了，JNDI服务使用这个线程上下文类加载器去加载所需要的SPI代码，也就是父类加载器请求子类加载器去完成类加载器的动作，这种行为实际上就是**打通了双亲委派模型的层次结构来逆向使用类加载器**，已经违背了双亲委派模型的一般性原则。
+
+#### 2.3.2 追求程序动态性
+
+这里所说的“动态性”指的是当前一些非常热门的名词：**代码热替换（HotSwap）**、**模块热部署(Hot Deployment)**等。即希望应用程序能像计算机的外设一样，接上鼠标、键盘，不用重启就能立即使用，鼠标出了问题或需要升级就换个鼠标，不用停机或重启。
+
+当前业界“事实上”的Java模块化标准是OSGi，而OSGi实现代码热部署的关键则是它自定义的类机载器的实现。关于OSGi的细节将在稍后的案例分析中详细讲解。
+
+### 2.4 自定义类加载器
+
+**API**
+
+![](https://image.ldbmcs.com/2019-07-10-143043.jpg)
+
+其中有如下三个比较重要的方法：
+
+| 方法                                                     | 说明                                                         |
+| :------------------------------------------------------- | :----------------------------------------------------------- |
+| **defineClass(String name, byte[] b, int off, int len)** | 把字节数组 b中的内容转换成 Java 类，该字节数组可以看成是二进制流字节组成的文件，返回的结果是`java.lang.Class`类的实例。这个方法被声明为 final的。 |
+| **loadClass(String name)**                               | 上文中已贴出源码，实现了双亲委派模型，调用`findClass()`执行类加载动作,返回的是`java.lang.Class`类的实例。 |
+| **findClass(String name)**                               | 通过传入的类全限定名name来获取对应的类，返回的是`java.lang.Class`类的实例，该类没有提供具体的实现，开发者在自定义类加载器时需重用此方法，在实现此方法时需调用`defineClass(String name, byte[] b, int off, int len)`方法。 |
+
+在了解完上述内容后，我们可以容易地意识到自定义类加载器有以下两种方式：
+
+- **采用双亲委派模型**：继承ClassLoader类，只需重写其的`findClass(String name)`方法，而不需重写`loadClass(String name)`方法。
+- **破坏双亲委派模型**：继承ClassLoader类，需要整个重写实现了双亲委派模型逻辑的`loadClass(String name)`方法。
+
+#### 2.4.1 实例
+
+下面我们来实现一个自定义类加载器，用来加载存储在文件系统上的 Java 字节代码。
+
+```java
+public class FileSystemClassLoader extends ClassLoader { 
+ 
+   private String rootDir; 
+ 
+   public FileSystemClassLoader(String rootDir) { 
+       this.rootDir = rootDir; 
+   } 
+ 
+   @Override
+   protected Class<?> findClass(String name) throws ClassNotFoundException { 
+       byte[] classData = getClassData(name); 
+       if (classData == null) { 
+           throw new ClassNotFoundException(); 
+       } 
+       else { 
+           return defineClass(name, classData, 0, classData.length); 
+       } 
+   } 
+ 
+   private byte[] getClassData(String className) { 
+       String path = classNameToPath(className); 
+       try { 
+           InputStream ins = new FileInputStream(path); 
+           ByteArrayOutputStream baos = new ByteArrayOutputStream(); 
+           int bufferSize = 4096; 
+           byte[] buffer = new byte[bufferSize]; 
+           int bytesNumRead = 0; 
+           while ((bytesNumRead = ins.read(buffer)) != -1) { 
+               baos.write(buffer, 0, bytesNumRead); 
+           } 
+           return baos.toByteArray(); 
+       } catch (IOException e) { 
+           e.printStackTrace(); 
+       } 
+       return null; 
+   } 
+ 
+   private String classNameToPath(String className) { 
+       return rootDir + File.separatorChar 
+               + className.replace('.', File.separatorChar) + ".class"; 
+   } 
+}
+```
+
+类 FileSystemClassLoader的 `findClass()`方法首先根据类的全名在硬盘上查找类的字节代码文件（.class 文件），然后读取该文件内容，最后通过 defineClass()方法来把这些字节代码转换成 `java.lang.Class`类的实例。
+
+### 2.5 案例分析
+
+#### 2.5.1 Tomcat：正统的类加载器架构
+
+主流的Java Web服务器如Tomcat、Jetty、WebLogic、WebSphere等等，都实现了自己定义的类加-需要加载 Java 核心库的类时（以 java开头的包和类），它会代理给父类加载器（通常是启动类加载器）来完成。**当它需要加载所导入的 Java 类时，它会代理给导出此 Java 类的模块来完成加载。**模块也可以显式的声明某些 Java 包和类，必须由父类加载器来加载。只需要设置系统属性 `org.osgi.framework.bootdelegation`的值即可。
+
+假设有两个模块 bundleA 和 bundleB，它们都有自己对应的类加载器 ClassLoaderA 和 ClassLoaderB。在 bundleA 中包含类 com.bundleA.Sample，并且该类被声明为导出的，也就是说可以被其它模块所使用的。bundleB 声明了导入 bundleA 提供的类 `com.bundleA.Sample`，并包含一个类 `com.bundleB.NewSample`继承自 `com.bundleA.Sample`。在 bundleB 启动的时候，其类加载器 classLoaderB 需要加载类 `com.bundleB.NewSample`，进而需要加载类 `com.bundleA.Sample`。由于 bundleB 声明了类 `com.bundleA.Sample`是导入的，classLoaderB 把加载类 `com.bundleA.Sample`的工作代理给导出该类的 bundleA 的类加载器 ClassLoaderA。ClassLoaderA 在其模块内部查找类 `com.bundleA.Sample`并定义它，所得到的类 `com.bundleA.Sample`实例就可以被所有声明导入了此类的模块使用。对于以 java开头的类，都是由父类加载器来加载的。如果声明了系统属性 `org.osgi.framework.bootdelegation=com.example.core.*`，那么对于包 `com.example.core`中的类，都是由父类加载器来完成的。 OSGi 模块的这种类加载器结构，使得一个类的不同版本可以共存在 Java 虚拟机中，带来了很大的灵活性。不过它的这种不同，也会给开发人员带来一些麻烦，尤其当模块需要使用第三方提供的库的时候。下面提供几条比较好的建议：
+
+- 如果一个类库只有一个模块使用，把该类库的 jar 包放在模块中，在 Bundle-ClassPath中指明即可。
+- 如果一个类库被多个模块共用，可以为这个类库单独的创建一个模块，把其它模块需要用到的 Java 包声明为导出的。其它模块声明导入这些类。
+- 如果类库提供了 SPI 接口，并且利用线程上下文类加载器来加载 SPI 实现的 Java 类，有可能会找不到 Java 类。如果出现了 NoClassDefFoundError异常，首先检查当前线程的上下文类加载器是否正确。通过 `Thread.currentThread().getContextClassLoader()`就可以得到该类加载器。该类加载器应该是该模块对应的类加载器。如果不是的话，可以首先通过 `class.getClassLoader()`来得到模块对应的类加载器，再通过 `Thread.currentThread().setContextClassLoader()`来设置当前线程的上下文类加载器。
+
+## 3. 参考资料
 
 - [《深入理解Java虚拟机——JVM高级特性与最佳实践》－周志明](https://book.douban.com/subject/24722612/)
+- [深入探讨 Java 类加载器－成富](https://www.ibm.com/developerworks/cn/java/j-lo-classloader/index.html#code6)
 
