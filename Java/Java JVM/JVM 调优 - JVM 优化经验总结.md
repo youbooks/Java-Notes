@@ -1,4 +1,8 @@
-原文链接: https://www.ibm.com/developerworks/cn/java/j-lo-jvm-optimize-experience/index.html
+# JVM 调优 - JVM 优化经验总结
+
+[TOC]
+
+> 转载: [JVM 优化经验总结](https://www.ibm.com/developerworks/cn/java/j-lo-jvm-optimize-experience/index.html)
 
 ## 0. 开始之前
 

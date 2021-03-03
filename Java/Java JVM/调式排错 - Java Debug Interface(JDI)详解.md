@@ -1,4 +1,8 @@
-> [使用 Java Debug Interface（JDI）调试多线程应用程序](https://www.ibm.com/developerworks/cn/java/j-lo-jdi/index.html)
+# 调试排错 - Java Debug Interface(JDI)详解
+
+[TOC]
+
+> 转载 ：[使用 Java Debug Interface（JDI）调试多线程应用程序](https://www.ibm.com/developerworks/cn/java/j-lo-jdi/index.html)
 
 多线程环境下的程序调试是让开发者头痛的问题。在 IDE 中通过添加断点的方式调试程序，往往会因为停在某一条线程的某个断点上而错失了其他线程的执行，线程之间的调度往往无法预期，并且会因为断点影响了实际的线程执行顺序。因此，在调试多线程程序时，开发者往往会选择打印 `Trace Log` 的方式来帮助调试。
 
