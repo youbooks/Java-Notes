@@ -1,3 +1,7 @@
+# Java 集合 - HashMap的死循环问题
+
+[TOC]
+
 > 转载：[老生常谈，HashMap的死循环](https://juejin.im/post/6844903554264596487)
 
 ## 1. 问题

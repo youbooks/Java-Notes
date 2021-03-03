@@ -1,6 +1,8 @@
-原文链接：[Java native方法以及JNI实践](https://www.jianshu.com/p/1ba925157f7d)
+# Java 基础 - Java native方法以及JNI实践
 
----
+[TOC]
+
+> 转载：[Java native方法以及JNI实践](https://www.jianshu.com/p/1ba925157f7d)
 
 ## 1. 前言
 
