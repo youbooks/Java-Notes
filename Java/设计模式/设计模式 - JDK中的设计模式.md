@@ -1,4 +1,8 @@
-原文链接: https://juejin.im/post/5cd842d56fb9a0323070efc0
+# 设计模式 - JDK中的设计模式
+
+[TOC]
+
+> 转载: [【肥朝】从JDK中，我们能学到哪些设计模式？](https://juejin.im/post/5cd842d56fb9a0323070efc0)
 
 ## 1. 创建型模式
 
