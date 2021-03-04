@@ -1,6 +1,8 @@
+# MySQL索引背后的数据结构及算法原理
+
 [TOC]
 
-原文链接: https://blog.codinglabs.org/articles/theory-of-mysql-index.html
+> 转载: https://blog.codinglabs.org/articles/theory-of-mysql-index.html
 
 ## 1. 摘要
 

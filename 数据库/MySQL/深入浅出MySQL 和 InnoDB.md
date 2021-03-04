@@ -1,4 +1,4 @@
-# 『浅入浅出』MySQL 和 InnoDB
+# 浅入浅出MySQL 和 InnoDB
 
 [TOC]
 
