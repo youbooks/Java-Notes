@@ -1,4 +1,4 @@
-原文链接: https://www.jianshu.com/p/8c7b92b4396c
+> 转载: https://www.jianshu.com/p/8c7b92b4396c
 
 ## 1. 什么是Feign？
 
