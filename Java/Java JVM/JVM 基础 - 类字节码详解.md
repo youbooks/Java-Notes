@@ -1,7 +1,5 @@
 # JVM 基础 - 类字节码详解
 
-[TOC]
-
 > 原文链接：[JVM 基础 - 类字节码详解](https://www.pdai.tech/md/java/jvm/java-jvm-class.html)
 
 > 源代码通过编译器编译为字节码，再通过类加载子系统进行加载到JVM中运行。@pdai

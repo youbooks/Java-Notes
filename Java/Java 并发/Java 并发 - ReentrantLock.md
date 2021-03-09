@@ -82,7 +82,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
 从代码中我们可以看出。整个`ReentrantLock`类的实现其实都是交给了其内部`FairSync`与`NonfairSync`两个类。在`ReentrantLock`类中有两个构造函数，其中不带参数的构造函数中默认使用的`NonfairSync（非公平锁）`。另一个带参数的构造函数，用户自己来决定是`FairSync（公平锁）`还是非公平锁。
 
-## 4. 重进入实现
+## 4. 可重入实现
 
 在上文中，我们提到了`ReentrantLock`是支持重进入的，那什么是重进入呢？`重进入是指任意线程在获取到锁之后能够再次获取该锁，而不会被锁阻塞`。那接下来我们看看这个例子，如下所示：
 

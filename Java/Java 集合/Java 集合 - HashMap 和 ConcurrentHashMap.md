@@ -1,7 +1,5 @@
 # Java 集合 - HashMap 和 ConcurrentHashMap
 
-[TOC]
-
 > 转载: [Java7/8 中的 HashMap 和 ConcurrentHashMap 全解析](https://javadoop.com/post/hashmap)
 
 今天发一篇"水文"，可能很多读者都会表示不理解，不过我想把它作为并发序列文章中不可缺少的一块来介绍。本来以为花不了多少时间的，不过最终还是投入了挺多时间来完成这篇文章的。

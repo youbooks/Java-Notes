@@ -1,7 +1,5 @@
 # Java IO - BIO 详解
 
-[TOC]
-
 > 原文链接：[Java IO - BIO 详解](https://www.pdai.tech/md/java/io/java-io-bio.html)
 
 BIO就是: blocking IO。最容易理解、最容易实现的IO工作方式，应用程序向操作系统请求网络IO操作，这时应用程序会一直等待；另一方面，操作系统收到请求后，也会等待，直到网络上有数据传到监听端口；操作系统在收集数据后，会把数据发送给应用程序；最后应用程序受到数据，并解除等待状态。@pdai

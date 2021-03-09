@@ -1,4 +1,6 @@
-原文链接: https://www.jianshu.com/p/116fc2d08165
+# Nginx强制跳转Https
+
+> 转载: https://www.jianshu.com/p/116fc2d08165
 
 ## 1. Nginx安装注意事项
 

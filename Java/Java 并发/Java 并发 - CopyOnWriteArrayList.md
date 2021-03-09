@@ -1,3 +1,5 @@
+# Java 并发 - CopyOnWriteArrayList
+
 > 转载：[并发容器之CopyOnWriteArrayList](https://juejin.im/post/6844903602436374541)
 
 ## 1. CopyOnWriteArrayList 的简介

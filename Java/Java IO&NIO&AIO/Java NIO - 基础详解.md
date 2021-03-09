@@ -1,7 +1,5 @@
 # Java NIO - 基础详解
 
-[TOC]
-
 > 原文链接：[Java NIO - 基础详解](https://www.pdai.tech/md/java/io/java-io-nio.html)
 
 新的输入/输出 (NIO) 库是在 JDK 1.4 中引入的，弥补了原来的 I/O 的不足，提供了高速的、面向块的 I/O。

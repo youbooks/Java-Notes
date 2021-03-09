@@ -1,7 +1,5 @@
 # Java IO - 源码: OutputStream
 
-[TOC]
-
 ## 1. OutputStream 类实现关系
 
 ## 2. OutputStream 抽象类

@@ -1,7 +1,5 @@
 # 详解分布式协调服务 ZooKeeper
 
-[TOC]
-
 > 原文链接：[详解分布式协调服务 ZooKeeper](https://draveness.me/zookeeper-chubby/)
 
 在 2006 年，Google 发表了一篇名为 [The Chubby lock service for loosely-coupled distributed systems](https://static.googleusercontent.com/media/research.google.com/en//archive/chubby-osdi06.pdf) 的论文，其中描述了一个分布式锁服务 Chubby 的设计理念和实现原理；作为 Google 内部的一个基础服务，虽然 Chubby 与 GFS、Bigtable 和 MapReduce 相比并没有那么大的名气，不过它在 Google 内部也是非常重要的基础设施。

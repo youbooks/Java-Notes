@@ -1,6 +1,6 @@
 # mac终端bash、zsh、oh-my-zsh最实用教程
 
-原文链接：https://juejin.im/post/5dd4f3fdf265da47b8478742
+> 转载：https://juejin.im/post/5dd4f3fdf265da47b8478742
 
 ## 1.  基本介绍
 

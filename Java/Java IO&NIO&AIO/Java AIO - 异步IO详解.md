@@ -1,7 +1,5 @@
 # Java AIO - 异步IO详解
 
-[TOC]
-
 > 原文链接：[Java AIO - 异步IO详解](https://www.pdai.tech/md/java/io/java-io-aio.html)
 
 ## 1. 异步IO

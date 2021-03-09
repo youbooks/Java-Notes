@@ -1,7 +1,5 @@
 # Java IO - 源码: InputStream
 
-[TOC]
-
 ## 1. InputStream 类实现关系
 
 ![2021-02-24-wRhkfe](https://image.ldbmcs.com/2021-02-24-wRhkfe.jpg)

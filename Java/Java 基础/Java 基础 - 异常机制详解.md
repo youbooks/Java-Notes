@@ -1,7 +1,5 @@
 # Java 基础 - 异常机制详解
 
-[TOC]
-
 > 原文链接：[Java 基础 - 异常机制详解](https://www.pdai.tech/md/java/basic/java-basic-x-exception.html)
 
 Java异常是Java提供的一种识别及响应错误的一致性机制，java异常机制可以使程序中异常处理代码和正常业务代码分离，保证程序代码更加优雅，并提高程序健壮性。本文综合多篇文章后，总结了Java 异常的相关知识，希望可以提升你对Java中异常的认知效率。

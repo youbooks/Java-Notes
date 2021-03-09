@@ -1,3 +1,5 @@
+# Java 并发 - 从ReentrantLock的实现看AQS的原理及应用
+
 > 转载：[从ReentrantLock的实现看AQS的原理及应用](https://tech.meituan.com/2019/12/05/aqs-theory-and-apply.html)
 
 ## 0. 前言
@@ -75,15 +77,15 @@ static final class NonfairSync extends Sync {
 这块代码的含义为：
 
 - 若通过CAS设置变量State（同步状态）成功，也就是获取锁成功，则将当前线程设置为独占线程。
-- 若通过CAS设置变量State（同步状态）失败，也就是获取锁失败，则进入Acquire方法进行后续处理。
+- 若通过CAS设置变量State（同步状态）失败，也就是获取锁失败，则进入`Acquire`方法进行后续处理。
 
 第一步很好理解，但第二步获取锁失败后，后续的处理策略是怎么样的呢？这块可能会有以下思考：
 
 - 某个线程获取锁失败的后续流程是什么呢？有以下两种可能：
 
-(1) 将当前线程获锁结果设置为失败，获取锁流程结束。这种设计会极大降低系统的并发度，并不满足我们实际的需求。所以就需要下面这种流程，也就是AQS框架的处理流程。
+  1. 将当前线程获锁结果设置为失败，获取锁流程结束。这种设计会极大降低系统的并发度，并不满足我们实际的需求。所以就需要下面这种流程，也就是AQS框架的处理流程。
 
-(2) 存在某种排队等候机制，线程继续等待，仍然保留获取锁的可能，获取锁流程仍在继续。
+  2. **存在某种排队等候机制**，线程继续等待，仍然保留获取锁的可能，获取锁流程仍在继续。
 
 - 对于问题1的第二种情况，既然说到了排队等候机制，那么就一定会有某种队列形成，这样的队列是什么数据结构呢？
 - 处于排队等候机制中的线程，什么时候可以有机会获取锁呢？
@@ -107,7 +109,7 @@ static final class FairSync extends Sync {
 
 结合公平锁和非公平锁的加锁流程，虽然流程上有一定的不同，但是都调用了Acquire方法，而Acquire方法是FairSync和UnfairSync的父类AQS中的核心方法。
 
-对于上边提到的问题，其实在ReentrantLock类源码中都无法解答，而这些问题的答案，都是位于Acquire方法所在的类AbstractQueuedSynchronizer中，也就是本文的核心——AQS。下面我们会对AQS以及ReentrantLock和AQS的关联做详细介绍（相关问题答案会在2.3.5小节中解答）。
+对于上边提到的问题，其实在ReentrantLock类源码中都无法解答，而这些问题的答案，都是位于Acquire方法所在的类`AbstractQueuedSynchronizer`中，也就是本文的核心——AQS。下面我们会对AQS以及ReentrantLock和AQS的关联做详细介绍（相关问题答案会在2.3.5小节中解答）。
 
 ## 2. AQS
 
@@ -127,13 +129,13 @@ static final class FairSync extends Sync {
 
 AQS核心思想是，如果被请求的共享资源空闲，那么就将当前请求资源的线程设置为有效的工作线程，将共享资源设置为锁定状态；如果共享资源被占用，就需要一定的阻塞等待唤醒机制来保证锁分配。这个机制主要用的是CLH队列的变体实现的，将暂时获取不到锁的线程加入到队列中。
 
-CLH：Craig、Landin and Hagersten队列，是单向链表，AQS中的队列是CLH变体的虚拟双向队列（FIFO），AQS是通过将每条请求共享资源的线程封装成一个节点来实现锁的分配。
+`CLH`：Craig、Landin and Hagersten队列，是`单向链表`，AQS中的队列是CLH变体的虚拟双向队列（FIFO），AQS是通过将每条请求共享资源的线程封装成一个节点来实现锁的分配。
 
 主要原理图如下：
 
 ![img](https://p0.meituan.net/travelcube/7132e4cef44c26f62835b197b239147b18062.png)
 
-AQS使用一个Volatile的int类型的成员变量来表示同步状态，通过内置的FIFO队列来完成资源获取的排队工作，通过CAS完成对State值的修改。
+**AQS使用一个Volatile的int类型的成员变量来表示同步状态，通过内置的FIFO队列来完成资源获取的排队工作，通过CAS完成对State值的修改。**
 
 #### 2.1.1 AQS数据结构
 
@@ -159,7 +161,7 @@ AQS使用一个Volatile的int类型的成员变量来表示同步状态，通过
 | SHARED    | 表示线程以共享的模式等待锁     |
 | EXCLUSIVE | 表示线程正在以独占的方式等待锁 |
 
-waitStatus有下面几个枚举值：
+`waitStatus`有下面几个枚举值：
 
 | 枚举      | 含义                                           |
 | :-------- | :--------------------------------------------- |
@@ -207,7 +209,7 @@ private volatile int state;
 | protected int tryAcquireShared(int arg)     | 共享方式。arg为获取锁的次数，尝试获取资源。负数表示失败；0表示成功，但没有剩余可用资源；正数表示成功，且有剩余资源。 |
 | protected boolean tryReleaseShared(int arg) | 共享方式。arg为释放锁的次数，尝试释放资源，如果释放后允许唤醒后续等待结点返回True，否则返回False。 |
 
-一般来说，自定义同步器要么是独占方式，要么是共享方式，它们也只需实现tryAcquire-tryRelease、tryAcquireShared-tryReleaseShared中的一种即可。AQS也支持自定义同步器同时实现独占和共享两种方式，如ReentrantReadWriteLock。ReentrantLock是独占锁，所以实现了tryAcquire-tryRelease。
+一般来说，自定义同步器要么是独占方式，要么是共享方式，它们也只需实现`tryAcquire-tryRelease`、`tryAcquireShared-tryReleaseShared`中的一种即可。AQS也支持自定义同步器同时实现独占和共享两种方式，如`ReentrantReadWriteLock`。ReentrantLock是独占锁，所以实现了tryAcquire-tryRelease。
 
 以非公平锁为例，这里主要阐述一下非公平锁与AQS之间方法的关联之处，具体每一处核心方法的作用会在文章后面详细进行阐述。
 

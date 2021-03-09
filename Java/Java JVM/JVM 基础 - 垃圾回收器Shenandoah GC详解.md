@@ -1,7 +1,5 @@
 # JVM 基础 - 来自JDK12的全新并发压缩垃圾回收器Shenandoah GC
 
-[TOC]
-
 > 转载： [Shenandoah GC：一个来自JDK12的全新并发压缩垃圾回收器](https://cloud.tencent.com/developer/article/1547019)
 
 是不是才听说了JDK11的ZGC，并且还没搞懂？不好意思，OpenJDK12马不停蹄的带来了Shenandoah GC。

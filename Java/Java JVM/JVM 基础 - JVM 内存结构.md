@@ -1,7 +1,5 @@
 # JVM 基础 - JVM 内存结构
 
-[TOC]
-
 ![2021-01-06-jvm-struct](https://image.ldbmcs.com/2021-01-06-jvm-struct.png)
 
 > 转载：[2万字长文包教包会 JVM 内存结构 保姆级学习笔记](http://www.starfish.ink/java/JVM/Runtime-Data-Areas.html)

@@ -1,7 +1,5 @@
 # Java 集合 - 高性能队列Disruptor详解
 
-[TOC]
-
 > 转载：[高性能队列——Disruptor](https://tech.meituan.com/2016/11/18/disruptor.html)
 
 ## 1. 背景

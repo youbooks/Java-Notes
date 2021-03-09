@@ -1,7 +1,5 @@
 # Java 集合 - TreeSet & TreeMap
 
-[TOC]
-
 > JDK版本：JDK 1.8.0_110
 
 ## 1. 概述

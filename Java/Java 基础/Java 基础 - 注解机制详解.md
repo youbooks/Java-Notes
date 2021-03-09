@@ -1,7 +1,5 @@
 # Java 基础 - 注解机制详解
 
-[TOC]
-
 > 原文链接：[Java 基础 - 注解机制详解](https://www.pdai.tech/md/java/basic/java-basic-x-annotation.html)
 
 注解是JDK1.5版本开始引入的一个特性，用于对代码进行说明，可以对包、类、接口、字段、方法参数、局部变量等进行注解。它是框架学习和设计者必须掌握的基础。

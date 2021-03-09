@@ -1,7 +1,5 @@
 # Java N(A)IO - Netty
 
-[TOC]
-
 > 原文链接：[Java N(A)IO - Netty](https://www.pdai.tech/md/java/io/java-io-nio-netty.html)
 
 > Netty是一个高性能、异步事件驱动的NIO框架，提供了对TCP、UDP和文件传输的支持。作为当前最流行的NIO框架，Netty在互联网领域、大数据分布式计算领域、游戏行业、通信行业等获得了广泛的应用，一些业界著名的开源组件也基于Netty构建，比如RPC框架、zookeeper等。@pdai
