@@ -128,5 +128,3 @@ public class CustomRule extends AbstractLoadBalancerRule {
 我来简单分析一下代码：首先获取 ILoadBalancer 对象，该对象可以获取当前的服务。我们需要获取当前可用的服务列表和当前所有的服务列表。
 
 total 表示服务被调用的次数，到4次，该服务调用停止，切换到下一个可用服务；currentIndex 表示当前可用服务列表中的索引。若调用次数小于4次，一直调用可用服务列表中索引为 currentIndex 的服务，到了4次之后，服务列表中的索引值++，表示下一个调用下一个服务。具体可以看代码中的注释。
-
-
