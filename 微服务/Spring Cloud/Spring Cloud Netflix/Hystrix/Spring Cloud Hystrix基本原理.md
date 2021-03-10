@@ -209,7 +209,7 @@ public class QueryOrderIdCommand extends HystrixCommand<Integer> {
 
 ### 2.1 降级
 
-HystrixCommand提供回退降级的方法：getFallback。在生产环境实现该方法的时候要注意该方法的响应要快尽量不要有网络依赖，这样才能保证降级一定是能成功。
+HystrixCommand提供回退降级的方法：`getFallback`。在生产环境实现该方法的时候要注意该方法的响应要快尽量不要有网络依赖，这样才能保证降级一定是能成功。
 
 假如说回退降级方法中还有网络依赖，那么就有失败的可能，这时候可以考虑多次降级，即在getFallback 方法调用中继续实现 新的 HystrixCommand 逻辑，保证调用不会失败。
 
