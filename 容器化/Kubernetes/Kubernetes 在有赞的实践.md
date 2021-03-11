@@ -1,7 +1,5 @@
 # Kubernetes 在有赞的实践
 
-[TOC]
-
 > 原文链接：[Kubernetes 在有赞的实践](https://tech.youzan.com/kubernetes-in-action/)
 
 ## 1. 背景
