@@ -288,7 +288,7 @@ public class SyncCodeBlock {
 }
 ```
 
-从上诉代码中，我们可以明白当我们声明synchronized代码块的时候，编译器会我们生产相应的monitorenter  与monitorexit 指令。当我们的JVM把字节码加载到内存的时候，会对这两个指令进行解析。其中关于monitorenter 与monitorenter的指令解析是通过`InterpreterRuntime.cpp`文件中的`InterpreterRuntime::monitorenter`与`InterpreterRuntime::monitorexit`两个函数分别实现的。
+从上诉代码中，我们可以明白当我们声明synchronized代码块的时候，编译器会我们生产相应的monitorenter与monitorexit指令。当我们的JVM把字节码加载到内存的时候，会对这两个指令进行解析。其中关于monitorenter 与monitorenter的指令解析是通过`InterpreterRuntime.cpp`文件中的`InterpreterRuntime::monitorenter`与`InterpreterRuntime::monitorexit`两个函数分别实现的。
 
 - `InterpreterRuntime::monitorenter(JavaThread* thread, BasicObjectLock* elem)`
 - `InterpreterRuntime::monitorexit(JavaThread* thread, BasicObjectLock* elem)`

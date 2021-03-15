@@ -74,11 +74,11 @@
 
 #### 1.3.2 验证
 
-验证是连接阶段的第一步，这一阶段的目的是确保**输入的Class文件的字节流能正确地解析并存储于方法区之内**，格式上符合描述一个Java类型信息的要求，并且不会危害虚拟机自身的安全。验证阶段是否严谨，直接决定了Java虚拟机是否能承受恶意代码的攻击。 从整体上看，验证阶段大致上会完成下面四个阶段的检验动作：文件格式验证、元数据验证、字节码验证、符号引用验证。
+验证是连接阶段的第一步，这一阶段的目的是确保**输入的Class文件的字节流能正确地解析并存储于方法区之内**，格式上符合描述一个Java类型信息的要求，并且不会危害虚拟机自身的安全。验证阶段是否严谨，直接决定了Java虚拟机是否能承受恶意代码的攻击。 从整体上看，验证阶段大致上会完成下面四个阶段的检验动作：**文件格式验证、元数据验证、字节码验证、符号引用验证**。
 
 **1. 文件格式验证**
 
-第一阶段要验证字节流是否符合Class文件格式的规范，并且能被当前版本的虚拟机处理。这一阶段可能包括下面这些验证点：
+第一阶段要验证字节流是否符合Class文件格式的规范z，并且能被当前版本的虚拟机处理。这一阶段可能包括下面这些验证点：
 
 - 是否以魔数0xCAFEBABE开头。
 - 主次版本号是否在当前虚拟机的处理范围之内
@@ -172,7 +172,7 @@ public static final int value = 123;
 
 在准备阶段，变量已经赋过一次系统要求的初始值，而在初始化阶段，根据程序员通过程序制定的主观计划去初始化类变量和其它资源，简单说，**初始化阶段即虚拟机执行类构造器<clinit>()方法的过程**。
 
-下面来详细讲解`<clinit>()`方法是怎么生成的，首先来了解此方法执行过程中可能会影响到程序运行行为的特点和细节：
+下面来详细讲解`<clinit>()`方法是怎么生成的，首先来了解此方法执行过程中可能会影响到f程序运行行为的特点和细节：
 
 - `<clinit>()`方法是由编译器自动收集类中所有类变量的赋值动作和静态语句块（static{} 块）中的语句合并产生的，编译器收集的顺序由语句在源文件中出现的顺序决定，特别注意的是，静态语句块只能访问到定义在它之前的类变量，定义在它之后的类变量只能赋值，不能访问。例如以下代码：
 
@@ -287,7 +287,7 @@ protected synchronized Class<?> loadClass(String name,boolean resolve)throws Cla
 
 #### 2.3.1 线程上下文类加载器
 
-双亲委派模型并不能解决 Java 应用开发中会遇到的类加载器的全部问题。Java 提供了很多**服务提供者接口（Service Provider Interface，SPI）**，允许第三方为这些接口提供实现。常见的 SPI 有 **JDBC、JCE、JNDI、JAXP 和 JBI** 等。这些 **SPI 的接口由 Java 核心库来提供**，如 JAXP 的 SPI 接口定义包含在 `javax.xml.parsers`包中。这些 SPI 的实现代码很可能是作为 Java 应用所依赖的 **jar 包**被包含进来，可以通过类路径（ClassPath）来找到，如实现了 JAXP SPI 的 Apache Xerces所包含的 jar 包。**SPI 接口中的代码经常需要加载具体的实现类。**如 JAXP 中的 `javax.xml.parsers.DocumentBuilderFactory`类中的 `newInstance()` 方法用来生成一个新的 `DocumentBuilderFactory` 的实例。这里的实例的真正的类是继承自 `javax.xml.parsers.DocumentBuilderFactory`，由 SPI 的实现所提供的。如在 Apache Xerces 中，实现的类是 org.apache.xerces.jaxp.DocumentBuilderFactoryImpl。而问题在于，**SPI 的接口**是**Java 核心库**的一部分，是**由引导类加载器加载**的，而**SPI 实现的 Java 类**一般是**由系统类加载器加载**的。引导类加载器是无法找到 SPI 的实现类的，因为它只加载 Java 的核心库。它也不能委派给系统类加载器，因为它是系统类加载器的祖先类加载器。也就是说，类加载器的双亲委派模型无法解决这个问题。
+双亲委派模型并不能解决 Java 应用开发中会遇到的类加载器的全部问题。Java 提供了很多**服务提供者接口（Service Provider Interface，SPI）**，允许第三方为这些接口提供实现。常见的 SPI 有 **JDBC、JCE、JNDI、JAXP 和 JBI** 等。这些 **SPI 的接口由 Java 核心库来提供**，如 JAXP 的 SPI 接口定义包含在 `javax.xml.parsers`包中。这些 SPI 的实现代码很可能是作为 Java 应用所依赖的 **jar 包**被包含进来，可以通过类路径（ClassPath）来找到，如实现了 JAXP SPI 的 Apache Xerces所包含的 jar 包。**SPI 接口中的代码经常需要加载具体的实现类。**如 JAXP 中的 `javax.xml.parsers.DocumentBuilderFactory`类中的 `newInstance()` 方法用来生成一个新的 `DocumentBuilderFactory` 的实例。这里的实例的真正的类是继承自 `javax.xml.parsers.DocumentBuilderFactory`，由 SPI 的实现所提供的。如在 Apache Xerces 中，实现的类是` org.apache.xerces.jaxp.DocumentBuilderFactoryImpl`。而问题在于，**SPI 的接口**是**Java 核心库**的一部分，是**由引导类加载器加载**的，而**SPI 实现的 Java 类**一般是**由系统类加载器加载**的。引导类加载器是无法找到 SPI 的实现类的，因为它只加载 Java 的核心库。它也不能委派给系统类加载器，因为它是系统类加载器的祖先类加载器。也就是说，类加载器的双亲委派模型无法解决这个问题。
 
 为了解决这个问题，Java设计团队只好引入了一个不太优雅的设计：**线程上下文类加载器（Thread Context ClassLoader）**。线程上下文类加载器是从 JDK 1.2 开始引入的。类 `java.lang.Thread`中的方法` getContextClassLoader()`和 `setContextClassLoader(ClassLoader cl)`用来获取和设置线程的上下文类加载器。如果没有通过 `setContextClassLoader(ClassLoader cl)`方法进行设置的话，线程将继承其父线程的上下文类加载器。Java 应用运行的初始线程的上下文类加载器是应用程序类加载器。在线程中运行的代码可以通过此类加载器来加载类和资源。
 

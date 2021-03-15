@@ -54,9 +54,9 @@ class AtomicDemo {
 
 基本数据类型原子类主要为以下几种：
 
-- AtomicBoolen: boolean类型原子类
-- AtomicInteger: int类型原子类
-- AtomicLong: long类型原子类
+- `AtomicBoolen`: boolean类型原子类
+- `AtomicInteger`: int类型原子类
+- `AtomicLong`: long类型原子类
 
 这里我们以AtomicInteger来进行讲解，具体代码如下：
 

@@ -26,6 +26,8 @@ HashMap 是最简单的，一来我们非常熟悉，二来就是它不支持并
 
 `capacity`：当前数组容量，始终保持 2^n，可以扩容，扩容后数组大小为当前的 2 倍。
 
+> 为什么数组容量始终保持2^n？分布均匀，位运算
+
 `loadFactor`：负载因子，默认为 0.75。
 
 `threshold`：扩容的阈值，等于 capacity * loadFactor
@@ -827,7 +829,7 @@ Java7 中实现的 ConcurrentHashMap 说实话还是比较复杂的，Java8 对 
 
 结构上和 Java8 的 HashMap 基本上一样，不过它要保证线程安全性，所以在源码上确实要复杂一些。
 
-### 初始化
+### 4.1 初始化
 
 ```java
 // 这构造函数里，什么都不干
@@ -852,7 +854,7 @@ sizeCtl 这个属性使用的场景很多，不过只要跟着文章的思路来
 
 如果你爱折腾，也可以看下另一个有三个参数的构造方法，这里我就不说了，大部分时候，我们会使用无参构造函数进行实例化，我们也按照这个思路来进行源码分析吧。
 
-### 4.1 put 过程分析
+### 4.2 put 过程分析
 
 仔细地一行一行代码看下去：
 
@@ -955,7 +957,7 @@ final V putVal(K key, V value, boolean onlyIfAbsent) {
 
 put 的主流程看完了，但是至少留下了几个问题，**第一个是初始化，第二个是扩容，第三个是帮助数据迁移**，这些我们都会在后面进行一一介绍。
 
-#### 4.1.1 初始化数组：initTable
+#### 4.2.1 初始化数组：initTable
 
 这个比较简单，主要就是初始化一个**合适大小**的数组，然后会设置 sizeCtl。
 
@@ -993,7 +995,7 @@ private final Node<K,V>[] initTable() {
 }
 ```
 
-#### 4.1.2 链表转红黑树: treeifyBin
+#### 4.2.2 链表转红黑树: treeifyBin
 
 前面我们在 put 源码分析也说过，treeifyBin 不一定就会进行红黑树转换，也可能是仅仅做数组扩容。我们还是进行源码分析吧。
 
@@ -1033,7 +1035,7 @@ private final void treeifyBin(Node<K,V>[] tab, int index) {
 }
 ```
 
-### 4.2 扩容：tryPresize
+### 4.3 扩容：tryPresize
 
 如果说 Java8 ConcurrentHashMap 的源码不简单，那么说的就是扩容操作和迁移操作。
 
@@ -1099,7 +1101,7 @@ private final void tryPresize(int size) {
 
 所以，可能的操作就是执行 **1 次 transfer(tab, null) + 多次 transfer(tab, nt)**，这里怎么结束循环的需要看完 transfer 源码才清楚。
 
-#### 4.2.1 数据迁移：transfer
+#### 4.3.1 数据迁移：transfer
 
 下面这个方法有点长，将原来的 tab 数组的元素迁移到新的 nextTab 数组中。
 
@@ -1317,7 +1319,7 @@ private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
 
 这个时候，再回去仔细看 tryPresize 方法可能就会更加清晰一些了。
 
-### 4.3 get 过程分析
+### 4.4 get 过程分析
 
 get 方法从来都是最简单的，这里也不例外：
 

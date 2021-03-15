@@ -696,7 +696,7 @@ public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
 }
 ```
 
-把新生成的单例bean加入到类型为MAP 的singletonObjects属性中，这也就是前面singletonObjects（）方法中获取单例bean时从此Map中获取的原因。
+把新生成的单例bean加入到类型为MAP 的singletonObjects属性中，这也就是前面`singletonObjects()`方法中获取单例bean时从此Map中获取的原因。
 
 ```java
 protected void addSingleton(String beanName, Object singletonObject) {

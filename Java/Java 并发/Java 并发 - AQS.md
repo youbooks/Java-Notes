@@ -43,7 +43,7 @@ AQS的设计是基于模板方法模式的，也就是说，使用者需要继�
 #### 3.3.1 独占式获取与释放同步状态
 
 1. `void acquire(int arg)`：独占式获取同步状态，如果当前线程获取同步状态成功，则返回，否则进入同步队列等待，该方法会调用tryAcquire(int arg)方法。
-2. v`oid acquireInterruptibly(int arg)`：与 void acquire(int arg)基本逻辑相同，但是该方法`响应中断`,如果当前没有获取到同步状态，那么就会进入等待队列，如果当前线程被中断（`Thread().interrupt()`），那么该方法将会抛出InterruptedException，并返回。
+2. `void acquireInterruptibly(int arg)`：与 void acquire(int arg)基本逻辑相同，但是该方法`响应中断`,如果当前没有获取到同步状态，那么就会进入等待队列，如果当前线程被中断（`Thread().interrupt()`），那么该方法将会抛出InterruptedException，并返回。
 3. `boolean tryAcquireNanos(int arg, long nanosTimeout)`：在acquireInterruptibly(int arg)的基础上，增加了超时限制，如果当前线程没有获取到同步状态，那么将返回fase，反之返回true。
 4. boolean release(int arg) ：独占式的释放同步状态
 
