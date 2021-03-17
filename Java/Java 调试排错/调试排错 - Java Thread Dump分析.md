@@ -84,8 +84,6 @@ Thread Dump是非常有用的诊断Java应用问题的工具。每一个Java虚�
   }
   ```
 
-  著作权归https://www.pdai.tech所有。 链接：https://www.pdai.tech/md/java/jvm/java-jvm-thread-dump.html
-
   如上，线程的执行过程，先用 `synchronized` 获得了这个对象的 Monitor（对应于 `locked <0xb3885f60>` ）。当执行到 `obj.wait()`，线程即放弃了 Monitor的所有权，进入 “wait set”队列（对应于 `waiting on <0xb3885f60>` ）。
 
   **在堆栈的第一行信息中，进一步标明了线程在代码级的状态**，例如：

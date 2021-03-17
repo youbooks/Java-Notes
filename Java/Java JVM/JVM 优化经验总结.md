@@ -1,6 +1,4 @@
-# JVM 调优 - JVM 优化经验总结
-
-[TOC]
+# JVM 优化经验总结
 
 > 转载: [JVM 优化经验总结](https://www.ibm.com/developerworks/cn/java/j-lo-jvm-optimize-experience/index.html)
 

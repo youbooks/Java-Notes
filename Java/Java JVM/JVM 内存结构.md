@@ -1,4 +1,4 @@
-# JVM 基础 - JVM 内存结构
+# JVM 内存结构
 
 ![2021-01-06-jvm-struct](https://image.ldbmcs.com/2021-01-06-jvm-struct.png)
 

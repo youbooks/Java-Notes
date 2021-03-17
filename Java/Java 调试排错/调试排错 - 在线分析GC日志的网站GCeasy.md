@@ -1,7 +1,5 @@
 # 调试排错 - 在线分析GC日志的网站GCeasy
 
-[TOC]
-
 > 原文链接：[一文学会使用GCeasy——一款超好用的在线分析GC日志的网站](https://blog.csdn.net/CoderBruis/article/details/101234738)
 
 ## 1. 前言

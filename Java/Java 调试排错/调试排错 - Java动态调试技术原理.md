@@ -1,7 +1,5 @@
 # 调试排错 - Java动态调试技术原理
 
-[TOC]
-
 > 原文链接：[Java 动态调试技术原理及实践](https://tech.meituan.com/2019/11/07/java-dynamic-debugging-technology.html)
 
 ## 1. 动态调试要解决的问题

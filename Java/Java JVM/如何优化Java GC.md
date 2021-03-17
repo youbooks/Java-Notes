@@ -1,4 +1,4 @@
-# JVM基础 - 如何优化Java GC
+# 如何优化Java GC
 
 > 原文链接：https://crowhawk.github.io/2017/08/21/jvm_4/
 

@@ -1,8 +1,8 @@
-原文链接：[Docker Compose：链接外部容器的几种方式]([https://notes.doublemine.me/2017-06-12-Docker-Compose-%E9%93%BE%E6%8E%A5%E5%A4%96%E9%83%A8%E5%AE%B9%E5%99%A8%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F.html](https://notes.doublemine.me/2017-06-12-Docker-Compose-链接外部容器的几种方式.html))
+# Docker Compose：链接外部容器的几种方式
 
----
+> 转载：[Docker Compose：链接外部容器的几种方式](https://notes.doublemine.me/2017-06-12-Docker-Compose-%E9%93%BE%E6%8E%A5%E5%A4%96%E9%83%A8%E5%AE%B9%E5%99%A8%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F.html)
 
-> 在Docker中，容器之间的链接是一种很常见的操作：它提供了访问其中的某个容器的网络服务而不需要将所需的端口暴露给Docker Host主机的功能。Docker Compose中对该特性的支持同样是很方便的。然而，如果需要链接的容器没有定义在同一个`docker-compose.yml`中的时候，这个时候就稍微麻烦复杂了点。
+在Docker中，容器之间的链接是一种很常见的操作：它提供了访问其中的某个容器的网络服务而不需要将所需的端口暴露给Docker Host主机的功能。Docker Compose中对该特性的支持同样是很方便的。然而，如果需要链接的容器没有定义在同一个`docker-compose.yml`中的时候，这个时候就稍微麻烦复杂了点。
 
 在不使用Docker Compose的时候，将两个容器链接起来使用`—link`参数，相对来说比较简单，以`nginx`镜像为例子：
 

@@ -28,11 +28,11 @@ Java虚拟机阵营：Sun HotSpot VM、BEA JRockit VM、IBM J9 VM、Azul VM、Ap
 
 因此，产生heap dump(内存溢出)错误原因一般出于以下原因：
 
-1. JVM内存过小，
+1. JVM内存过小
 
-2. 程序不严密，
+2. 程序不严密
 
-3. 产生过多的垃圾无法回收。
+3. 产生过多的垃圾无法回收
 
 ### 2.2 heap dump文件如何生成？
 

@@ -1,7 +1,5 @@
 # 调试排错 - Java应用在线调试Arthas
 
-[TOC]
-
 > 原文链接：[调试排错 - Java应用在线调试Arthas](https://www.pdai.tech/md/java/jvm/java-jvm-agent-arthas.html)
 
 ## 1. Arthas简介

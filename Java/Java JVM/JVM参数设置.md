@@ -1,6 +1,4 @@
-# JVM 调优 - JVM参数设置
-
-[TOC]
+# JVM参数设置
 
 > 转载：[JVM参数设置](https://sasaxie.github.io/java/2018/05/02/JVM%E5%8F%82%E6%95%B0%E8%AE%BE%E7%BD%AE/)
 

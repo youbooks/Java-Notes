@@ -139,15 +139,20 @@ daemon.containerd.Create(context.Background(), container.ID, spec, createOptions
 
 如果 Docker 的容器通过 Linux 的命名空间完成了与宿主机进程的网络隔离，但是却又没有办法通过宿主机的网络与整个互联网相连，就会产生很多限制，所以 Docker 虽然可以通过命名空间创建一个隔离的网络环境，但是 Docker 中的服务仍然需要与外界相连才能发挥作用。
 
-每一个使用 `docker run` 启动的容器其实都具有单独的网络命名空间，Docker 为我们提供了四种不同的网络模式，Host、Container、None 和 Bridge 模式。
+每一个使用 `docker run` 启动的容器其实都具有单独的网络命名空间，**Docker 为我们提供了四种不同的网络模式，Host、Container、None 和 Bridge 模式。**
 
 ![2021-03-07-b643OI](https://image.ldbmcs.com/2021-03-07-b643OI.jpg)
+
+> 1. **Host**：和宿主机共用一个Network Namespace。容器将不会虚拟出自己的网卡，配置自己的IP等，而是使用宿主机的IP和端口。
+> 2. **Container**：这个模式指定新创建的容器和已经存在的一个容器共享一个 Network Namespace，而不是和宿主机共享。新创建的容器不会创建自己的网卡，配置自己的 IP，而是和一个指定的容器共享 IP、端口范围等。
+> 3. **None**：使用none模式，Docker 容器拥有自己的 Network Namespace，但是，并不为Docker 容器进行任何网络配置。也就是说，这个 Docker 容器没有网卡、IP、路由等信息。需要我们自己为 Docker 容器添加网卡、配置 IP 等。
+> 4. **Bridge**：当Docker进程启动时，会在主机上创建一个名为docker0的虚拟网桥，此主机上启动的Docker容器会连接到这个虚拟网桥上。虚拟网桥的工作方式和物理交换机类似，这样主机上的所有容器就通过交换机连在了一个二层网络中。从docker0子网中分配一个 IP 给容器使用，并设置 docker0 的 IP 地址为容器的默认网关。在主机上创建一对虚拟网卡veth pair设备，Docker 将 veth pair 设备的一端放在新创建的容器中，并命名为eth0（容器的网卡），另一端放在主机中，以vethxxx这样类似的名字命名，并将这个网络设备加入到 docker0 网桥中。可以通过brctl show命令查看。
 
 在这一部分，我们将介绍 Docker 默认的网络设置模式：**网桥模式**。在这种模式下，除了分配隔离的网络命名空间之外，Docker 还会为所有的容器设置 IP 地址。当 Docker 服务器在主机上启动之后会创建新的虚拟网桥 docker0，随后在该主机上启动的全部服务在默认情况下都与该网桥相连。
 
 ![2021-03-07-o8Jcg2](https://image.ldbmcs.com/2021-03-07-o8Jcg2.jpg)
 
-在默认情况下，每一个容器在创建时都会创建一对虚拟网卡，两个虚拟网卡组成了数据的通道，其中一个会放在创建的容器中，会加入到名为 docker0 网桥中。我们可以使用如下的命令来查看当前网桥的接口：
+在默认情况下，每一个容器在创建时都会创建一对虚拟网卡，两个虚拟网卡组成了数据的通道，其中一个会放在创建的容器中，会加入到名为 `docker0` 网桥中。我们可以使用如下的命令来查看当前网桥的接口：
 
 ```shell
 $ brctl show
@@ -203,6 +208,8 @@ PONG
 
 **Docker 通过 Linux 的命名空间实现了网络的隔离，又通过 iptables 进行数据包转发，让 Docker 容器能够优雅地为宿主机器或者其他容器提供服务。**
 
+> Linux下iptables不仅可以用来做防火墙还可以用来做端口转发。
+
 #### 1.2.1 libnetwork
 
 整个网络部分的功能都是通过 Docker 拆分出来的 libnetwork 实现的，它提供了一个连接不同容器的实现，同时也能够为应用给出一个能够提供一致的编程接口和网络层抽象的**容器网络模型**。
@@ -231,7 +238,7 @@ libnetwork 中最重要的概念，容器网络模型由以下的几个主要组
 
 ![2021-03-07-wI3Zwf](https://image.ldbmcs.com/2021-03-07-wI3Zwf.jpg)
 
-为了保证当前的容器进程没有办法访问宿主机器上其他目录，我们在这里还需要通过 libcontainer 提供的 `pivot_root` 或者 `chroot` 函数改变进程能够访问个文件目录的根节点。
+为了保证当前的容器进程没有办法访问宿主机器上其他目录，我们在这里还需要通过 `libcontainer` 提供的 `pivot_root` 或者 `chroot` 函数改变进程能够访问个文件目录的根节点。
 
 ```c
 // pivor_root
