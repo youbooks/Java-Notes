@@ -1,6 +1,6 @@
 # Java中static关键字详解
 
-> 转载：[]()
+> 转载：[Java中static作用及用法详解](https://blog.csdn.net/fengyuzhengfan/article/details/38082999)
 
 ## 1. 概述
 
