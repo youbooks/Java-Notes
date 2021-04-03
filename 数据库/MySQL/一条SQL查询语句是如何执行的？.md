@@ -1,7 +1,5 @@
 # 一条SQL查询语句是如何执行的？
 
-[TOC]
-
 > 转载：[01 | 基础架构：一条SQL查询语句是如何执行的？](https://time.geekbang.org/column/article/68319)
 
 你好，我是林晓斌。
