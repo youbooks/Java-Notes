@@ -104,7 +104,65 @@ Java 8仍然延用了ISO的日历体系，并且与它的前辈们不同，java.
 
 新的库还增加了ZoneOffset及Zoned，可以为时区提供更好的支持。有了新的DateTimeFormatter之后日期的解析及格式化也变得焕然一新了。
 
-### 2.2 方法概览
+![](https://image.ldbmcs.com/2021-06-10-FEqxyy.jpg)
+
+**LocalDateTime、OffsetDateTime、ZonedDateTime**
+
+![](https://image.ldbmcs.com/2021-06-10-9KlNIc.jpg)
+
+在JSR 310日期时间体系了，一共有三个API可用于表示日期时间：
+
+- LocalDateTime：本地日期时间
+- OffsetDateTime：带偏移量的日期时间
+- ZonedDateTime：带时区的日期时间
+
+### 2.2 什么是LocalDateTime？
+
+![](https://image.ldbmcs.com/2021-06-10-RQIHMW.jpg)
+
+ISO-8601日历系统中不带时区的日期时间。
+
+> 说明：ISO-8601日系统是现今世界上绝大部分国家/地区使用的，这就是我们国人所说的公历，有闰年的特性
+
+LocalDateTime是一个不可变的日期-时间对象，它表示一个日期时间，通常被视为年-月-日-小时-分钟-秒。还可以访问其他日期和时间字段，如day-of-year、day-of-week和week-of-year等等，它的精度能达纳秒级别。
+
+该类不存储时区，所以适合日期的描述，比如用于生日、deadline等等。但是请记住，如果没有偏移量/时区等附加信息，一个时间是不能表示时间线上的某一时刻的。
+
+### 2.3 什么是OffsetDateTime？
+
+![](https://image.ldbmcs.com/2021-06-10-DkKNiQ.jpg)
+
+ISO-8601日历系统中与UTC偏移量有关的日期时间。OffsetDateTime是一个带有偏移量的日期时间类型。存储有精确到纳秒的日期时间，以及偏移量。可以简单理解为 OffsetDateTime = LocalDateTime + ZoneOffset。
+
+OffsetDateTime、ZonedDateTime和Instant它们三都能在时间线上以纳秒精度存储一个瞬间（请注意：LocalDateTime是不行的），也可理解我某个时刻。OffsetDateTime和Instant可用于模型的字段类型，因为它们都表示瞬间值并且还不可变，所以适合网络传输或者数据库持久化。
+
+> ZonedDateTime不适合网络传输/持久化，因为即使同一个ZoneId时区，不同地方获取到瞬时值也有可能不一样
+
+一个UTC偏移量 `offset-from-UTC` 仅仅只记录了时分秒而已，除此之外没有任何其他信息。举个例子 ，+08:00的意思时超前于UTC八个小时，而 -05:45 意思是落后于UTC五小时四十五分钟。
+
+而时区对于特定地区的人来说是过去，现在，未来的偏移量的历史集合。**像夏令时这样的异常会导致特定时间段内的偏移量会随时间变化，无论是过去已经发生的还是 未来政客们宣布计划的改变。**
+
+### 2.4 什么是ZonedDateTime？
+
+![](https://image.ldbmcs.com/2021-06-10-b6WBVk.jpg)
+
+ISO-8601国际标准日历系统中带有时区的日期时间。它存储所有的日期和时间字段，精度为纳秒，以及一个时区，带有用于处理不明确的本地日期时间的时区偏移量。
+
+这个API可以处理从`LocalDateTime -> Instant -> ZonedDateTime`的转换，其中用zone时区来表示偏移量（并非直接用offset哦）。两个时间点之间的转换会涉及到使用从ZoneId访问的规则计算偏移量（换句话说：偏移量并非写死而是根据规则计算出来的）。
+
+获取瞬间的偏移量很简单，因为每个瞬间只有一个有效的偏移量。但是，获取本地日期时间的偏移量并不简单。存在这三种情况：
+
+1. 正常情况：有一个有效的偏移量。对于一年中的绝大多数时间，适用正常情况，即本地日期时间只有一个有效的偏移量
+
+2. 时间间隙情况：没有有效偏移量。这是由于夏令时开始时从“冬季”改为“夏季”而导致时钟向前拨的时候。在间隙中，没有有效偏移量
+
+3. 重叠情况：有两个有效偏移量。这是由于秋季夏令时从“夏季”到“冬季”的变化，时钟会向后拨。在重叠部分中，有两个有效偏移量
+
+这三种情况如果要自己处理，估计头都大了。这就是使用JSR 310的优势，ZonedDateTime全帮你搞定，让你使用无忧。
+
+ZonedDateTime可简单认为是LocalDateTime和ZoneId的组合。而ZoneOffset是其内置的动态计算出来的一个次要信息，以确保输出一个瞬时值而存在，毕竟在某个瞬间偏移量ZoneOffset肯定是确定的。ZonedDateTime也可以理解为保存的状态相当于三个独立的对象：LocalDateTime、ZoneId和ZoneOffset。某个瞬间 = LocalDateTime + ZoneOffset。ZoneId确定了偏移量如何改变的规则。所以偏移量我们并不能自由设置（不提供set方法，构造时也不行），因为它由ZoneId来控制的。
+
+### 2.5 方法概览
 
 该包的API提供了大量相关的方法，这些方法一般有一致的方法前缀:
 
@@ -118,7 +176,7 @@ Java 8仍然延用了ISO的日历体系，并且与它的前辈们不同，java.
 - to: 转换到另一个类型。
 - at: 把这个对象与另一个对象组合起来，例如:  date.atTime(time)。
 
-## 3. 一些例子
+### 2.6 一些例子
 
 ```java
 public class TimeIntroduction {
@@ -270,7 +328,7 @@ public class TimeIntroduction {
 }
 ```
 
-## 4. 其它语言时间
+## 3. 其它语言时间
 
 日期与时间处理API，在各种语言中，可能都只是个不起眼的API，如果你没有较复杂的时间处理需求，可能只是利用日期与时间处理API取得系统时间，简单做些显示罢了，然而如果认真看待日期与时间，其复杂程度可能会远超过你的想象，天文、地理、历史、政治、文化等因素，都会影响到你对时间的处理。所以在处理时间上，最好选用JSR310(如果你用java8的话就实现310了)，或者Joda-Time。
 
@@ -282,7 +340,7 @@ public class TimeIntroduction {
 
 - Noda-Time: .NET 阵营的 Joda-Time 的复制。
 
-## 5. 总结
+## 4. 总结
 
  看完了这些例子后，我相信你已经对Java 8这套新的时间日期API有了一定的了解了。现在我们来回顾下关于这个新的API的一些关键的要素。
 
@@ -294,7 +352,7 @@ public class TimeIntroduction {
 - 时区指的是地球上共享同一标准时间的地区。每个时区都有一个唯一标识符，同时还有一个地区/城市(Asia/Tokyo)的格式以及从格林威治时间开始的一个偏移时间。比如说，东京的偏移时间就是+09:00。 OffsetDateTime类实际上包含了LocalDateTime与ZoneOffset。它用来表示一个包含格林威治时间偏移量(+/-小时: 分，比如+06:00或者 -08: 00)的完整的日期(年月日)及时间(时分秒，纳秒)。 DateTimeFormatter类用于在Java中进行日期的格式化与解析。与SimpleDateFormat不同，它是不可变且线程安全的，如果需要的话，可以赋值给一个静态变量。DateTimeFormatter类提供了许多预定义的格式器，你也可以自定义自己想要的格式。当然了，根据约定，它还有一个parse()方法是用于将字符串转换成日期的，如果转换期间出现任何错误，它会抛出DateTimeParseException异常。类似的，DateFormatter类也有一个用于格式化日期的format()方法，它出错的话则会抛出DateTimeException异常。
 - 再说一句，“MMM d yyyy”与“MMm dd yyyy”这两个日期格式也略有不同，前者能识别出”Jan 2 2014″与”Jan 14 2014″这两个串，而后者如果传进来的是”Jan 2 2014″则会报错，因为它期望月份处传进来的是两个字符。为了解决这个问题，在天为个位数的情况下，你得在前面补0，比如”Jan 2 2014″应该改为”Jan 02 2014″。
 
-## 6. 参考
+## 5. 参考
 
 - [Java 8 - LocalDate&LocalDateTime](https://www.pdai.tech/md/java/java8/java8-localdatetime.html)
 

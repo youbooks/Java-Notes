@@ -5,6 +5,7 @@ GitHub地址：https://github.com/ldbmcs/Java-Notes
 推荐使用[GitBook](https://ldbmcs.gitbook.io/java/)阅读。
 
 ```
+Java-Notes
 ├─ Java
 │  ├─ Java IO&NIO&AIO
 │  │  ├─ Java AIO - 异步IO详解.md
@@ -157,9 +158,9 @@ GitHub地址：https://github.com/ldbmcs/Java-Notes
 │  ├─ Java8 特性
 │  │  ├─ Java 8 - Guide To Java 8 Optional.md
 │  │  ├─ Java 8 - JRE精简.md
+│  │  ├─ Java 8 - JSR310.md
 │  │  ├─ Java 8 - JavaFx 2.0.md
 │  │  ├─ Java 8 - Lambda 表达式.md
-│  │  ├─ Java 8 - LocalDate&LocalDateTime.md
 │  │  ├─ Java 8 - StampedLock.md
 │  │  ├─ Java 8 - 其它更新.md
 │  │  ├─ Java 8 - 函数式接口Function、Consumer、Predicate、Supplier.md
@@ -177,18 +178,10 @@ GitHub地址：https://github.com/ldbmcs/Java-Notes
 │     ├─ 设计模式 - 备忘录模式.md
 │     ├─ 设计模式 - 概览.md
 │     └─ 设计模式 - 没用的设计模式.md
-├─ Java 8中日期
 ├─ Java进阶.md
 ├─ README.md
 ├─ 云原生
 │  └─ 什么是无服务器(what is serverless)？.md
-├─ 分享
-│  └─ Agile Coach
-│     ├─ # Branching.md
-│     ├─ 6.15.md
-│     ├─ Agile is a competitive advantage.md
-│     ├─ Going agila.md
-│     └─ branching.md
 ├─ 分布式
 │  ├─ RPC
 │  │  ├─ RPC - Dubbo&hsf&Spring cloud的区别.md
@@ -244,7 +237,6 @@ GitHub地址：https://github.com/ldbmcs/Java-Notes
 ├─ 大数据
 │  └─ Flink
 │     └─ Flink架构与核心组件.md
-├─ 如何快速的学习一门新的技术
 ├─ 学习&成长
 │  └─ 如何成为技术大牛.md
 ├─ 开发工具
@@ -500,6 +492,6 @@ GitHub地址：https://github.com/ldbmcs/Java-Notes
 │     ├─ 代码覆盖率-JaCoCo.md
 │     ├─ 浅谈代码覆盖率.md
 │     └─ 测试中 Fakes、Mocks 以及 Stubs 概念明晰.md
-└─ 面试.md
+└─ 面试大纲.md
 
 ```
