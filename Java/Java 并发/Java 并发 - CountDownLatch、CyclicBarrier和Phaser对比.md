@@ -70,7 +70,7 @@ CountDownLatch工作原理相对简单，可以简单看成一个倒计数器，
 
 在《[当我们说线程安全时，到底在说什么](http://www.jasongj.com/java/thread_safe)》一文中讲过内存屏障，它能保证屏障之前的代码一定在屏障之后的代码之前被执行。CyclicBarrier可以译为循环屏障，也有类似的功能。**CyclicBarrier可以在构造时指定需要在屏障前执行await的个数，所有对await的调用都会等待，直到调用await的次数达到预定值，所有等待都会立即被唤醒**。
 
-从使用场景上来说，CyclicBarrier是让多个线程互相等待某一事件的发生，然后同时被唤醒。而上文讲的CountDownLatch是让某一线程等待多个线程的状态，然后该线程被唤醒。dd
+从使用场景上来说，CyclicBarrier是让多个线程互相等待某一事件的发生，然后同时被唤醒。而上文讲的CountDownLatch是让某一线程等待多个线程的状态，然后该线程被唤醒。
 
 ### 2.2 CyclicBarrier实例
 
